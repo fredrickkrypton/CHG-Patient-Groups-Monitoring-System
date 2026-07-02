@@ -1,0 +1,172 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 260px;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    background: #2f3542;
+    overflow-y: auto;
+}
+
+/* MAIN CONTENT PUSHED RIGHT */
+.main-content {
+    margin-left: 260px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* TOP BAR */
+.topbar {
+    height: 60px;
+    background: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    border-bottom: 1px solid #ddd;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+/* USER INFO */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-info img {
+    border-radius: 50%;
+}
+
+/* CONTENT AREA */
+.content {
+    padding: 20px;
+    flex: 1;
+}
+
+/* FOOTER */
+.footer {
+    background: #fff;
+    padding: 10px;
+    text-align: center;
+    border-top: 1px solid #ddd;
+}
+
+/* MENU LINKS (IMPORTANT) */
+.sidebar a {
+    display: block;
+    color: #dfe4ea;
+    padding: 10px 15px;
+    text-decoration: none;
+}
+
+.sidebar a:hover {
+    background: #57606f;
+}
+
+.activemenu {
+    background: #1e90ff !important;
+    color: #fff !important;
+}
+/* ==========================================
+   SETTINGS PAGE & FORM STYLING 
+   ========================================== */
+
+.settings-container {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e2e8f0;
+    max-width: 750px;
+    margin: 10px 0;
+}
+
+.settings-container h2 {
+    color: #2f3542;
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #1e90ff;
+    padding-bottom: 8px;
+    font-size: 22px;
+}
+
+/* Form Layout Grid */
+.form-group {
+    margin-bottom: 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #57606f;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+/* Inputs, Textareas, and Select Fields */
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="email"],
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    font-size: 14px;
+    color: #2f3542;
+    background-color: #ffffff;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus, 
+.form-group textarea:focus, 
+.form-group select:focus {
+    border-color: #1e90ff;
+    box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.15);
+    outline: none;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 70px;
+    font-family: Arial, sans-serif;
+}
+
+/* Action Buttons */
+.form-actions {
+    margin-top: 25px;
+}
+
+.btn-update {
+    background-color: #1e90ff;
+    color: #ffffff;
+    border: none;
+    padding: 12px 25px;
+    font-size: 15px;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-update:hover {
+    background-color: #0077e6;
+}
+
+.btn-update:active {
+    transform: scale(0.98);
+}

@@ -1,0 +1,33 @@
+/* CSS Document */
+
+.panel_toolbox {
+    float: right;
+    min-width: 1px;
+}
+.table {
+    color:#212529;
+    font-size: small;
+}
+/*.right_col {
+   height:100%;
+}*/
+.panel_toolbox > li > a {
+    margin-right: 15px;
+	color: black;
+}
+.col-form-label {
+    text-align: right;
+}
+.activemenu {
+	color: darkturquoise !important;;
+}
+.manda {
+	border-bottom-color:red
+}
+thead {
+	background-color:#C1C1C1;
+}
+table.datatable thead th.no-sort {
+    background: none;
+    pointer-events: none;
+}

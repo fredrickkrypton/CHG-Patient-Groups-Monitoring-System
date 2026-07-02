@@ -1,0 +1,155 @@
+/* ==========================================
+   SETTINGS PAGE & FORM STYLING 
+   ========================================== */
+
+.settings-container {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e2e8f0;
+    max-width: 750px;
+    margin: 10px 0;
+}
+
+.settings-container h2 {
+    color: #2f3542;
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #1e90ff;
+    padding-bottom: 8px;
+    font-size: 22px;
+}
+
+/* Form Layout Grid */
+.form-group {
+    margin-bottom: 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #57606f;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+/* Inputs, Textareas, and Select Fields */
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="email"],
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    font-size: 14px;
+    color: #2f3542;
+    background-color: #ffffff;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus, 
+.form-group textarea:focus, 
+.form-group select:focus {
+    border-color: #1e90ff;
+    box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.15);
+    outline: none;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 70px;
+    font-family: Arial, sans-serif;
+}
+
+/* Action Buttons */
+.form-actions {
+    margin-top: 25px;
+}
+
+.btn-update {
+    background-color: #1e90ff;
+    color: #ffffff;
+    border: none;
+    padding: 12px 25px;
+    font-size: 15px;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-update:hover {
+    background-color: #0077e6;
+}
+
+.btn-update:active {
+    transform: scale(0.98);
+}
+/* ==========================================
+   FIXES FOR BOOTSTRAP / GENTELELLA SETTINGS FORM
+   ========================================== */
+
+/* Contain the settings panel card width */
+.x_panel {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e2e8f0;
+    max-width: 750px;
+    margin: 20px auto !important;
+    float: none !important;
+}
+
+/* Stylize the card header title */
+.x_title h2 {
+    color: #2f3542 !important;
+    font-size: 20px !important;
+    font-weight: 600;
+    border-bottom: 2px solid #1e90ff;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    width: 100%;
+    display: block;
+}
+
+/* Set input box width to look natural instead of spanning the entire screen */
+.item.form-group input[type="text"],
+.item.form-group input[type="email"],
+.item.form-group textarea {
+    width: 100% !important;
+    max-width: 500px; /* Limits width to a clean desktop look */
+    padding: 8px 12px !important;
+    border: 1px solid #cccccc !important;
+    border-radius: 5px !important;
+    box-sizing: border-box;
+}
+
+/* Align labels properly */
+.col-form-label {
+    font-weight: 600;
+    color: #57606f;
+    padding-top: 8px;
+}
+
+/* Force the Update button to match your corporate blue brand color */
+.btn-success, .btn-success:hover, .btn-success:active {
+    background-color: #1e90ff !important;
+    border-color: #1e90ff !important;
+    color: #ffffff !important;
+    padding: 10px 24px !important;
+    font-size: 15px !important;
+    font-weight: bold !important;
+    border-radius: 5px !important;
+    box-shadow: none !important;
+}
+
+.btn-success:hover {
+    background-color: #0077e6 !important;
+    border-color: #0077e6 !important;
+}
