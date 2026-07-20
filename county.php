@@ -10,8 +10,19 @@ Copyright (C) Innovee Systems Erps.This program should NOT be distributed  WITHO
  
  
 //include('header.php');
-$page="county";
-workout($_GET['D']);
+$page="District";
+if (!function_exists('workout') && file_exists(__DIR__ . '/server.php')) {
+    require_once(__DIR__ . '/server.php');
+}
+
+if (function_exists('workout') && isset($_GET['D'])) { 
+    workout($_GET['D']); 
+}
+
+// Pre-initialize variables to prevent notice chains
+if (!isset($part)) { 
+    $part = ''; 
+}
 $timestamp=date('Y-m-d H:i:s');
 
 if($part=='') { caniacess($page."_view"); }
@@ -33,7 +44,7 @@ $created_on=ucwords(($timestamp));
 if(trim($name)!=''&&trim($created_by)!=''&&trim($created_on)!='') { 
 $sql = "INSERT INTO county (name,created_by,created_on)
 VALUES ('$name','$created_by','$created_on')";
-if ($conn->query($sql) === TRUE) {  $alert=1; audittrail($conn,'county','','inserting',$timestamp,$username); }
+if ($conn->query($sql) === TRUE) {  $alert=1; audittrail($conn,'District','','inserting',$timestamp,$username); }
  else { $error=("Error: you are duplicating data!"); }
  }   else {  $error="Fill all mandatory fields in red.";  }  
 if($alert!='')
@@ -70,7 +81,7 @@ $logid=$_POST['logid'];
 
 if(trim($name)!=''&&trim($created_by)!=''&&trim($created_on)!='') { 
 $sql = "UPDATE  county SET  name='$name',created_by='$created_by',created_on='$created_on' WHERE logid='$logid'";
-if ($conn->query($sql) === TRUE) {  $alert=1; audittrail($conn,'county',$logid,'updatings',$timestamp,$username); }
+if ($conn->query($sql) === TRUE) {  $alert=1; audittrail($conn,'District',$logid,'updatings',$timestamp,$username); }
  else { $error=("Error: you are duplicating data!"); }
  }   else {  $error="Fill all mandatory fields in red.";  }  
 if($alert!='')
@@ -146,7 +157,7 @@ if($error!='')
 
 <div class='col-md-8 offset-2'>
                 <div class='x_panel'>
-                  <div class='x_title'>
+                  <div class='x_title' style="color: #007bff;">
                     <h2><?=ucwords($title);?><small>new entry</small></h2>
 					<ul class='nav navbar-right panel_toolbox'>
                       <li><a class='link'><i class='fa fa-chevron-up'></i></a>
@@ -172,23 +183,23 @@ if($error!='')
 <div class="form-group row text-center">
 <div class="col-md">
 
- <button data-placement="bottom" title="Save data" type="submit" name="county_save" style="padding: 0.4em;" class="btn btn-success btn-sm"><span>Save</span>  <i class="fa fa-save"></i></button>
+ <button data-placement="bottom" title="Save data" type="submit" name="county_save" style="padding: 0.4em;" class="btn btn-primary btn-sm"><span>Save</span>  <i class="fa fa-save"></i></button>
  
 
 &nbsp; &nbsp;
 
 <a href="?/<?=$page?>&D=<? echo osteens('part=1')?>" data-placement="bottom" title="Add New Record">
-<button type="button" name="new" style="padding: 0.4em;" class="btn btn-success btn-sm"><span>New</span>  <i class="fa fa-file custom"></i></button></a>
+<button type="button" name="new" style="padding: 0.4em;" class="btn btn-primary btn-sm"><span>New</span>  <i class="fa fa-file custom"></i></button></a>
 
 &nbsp; &nbsp;
 
 <a href="?/<?=$page?>" data-placement="bottom" title="Go to records">
-<button type="button" name="exit" style="padding: 0.4em;" class="btn btn-success btn-sm">
+<button type="button" name="exit" style="padding: 0.4em;" class="btn btn-primary btn-sm">
 <span>View</span>  <i class="fa fa-search custom"></i></button></a>
 
 &nbsp; &nbsp;
 
-<a href="?/<?=$page?>" data-placement="bottom" title="Go to dashboard"><button style="padding: 0.4em;" type="button" name="exit" class="btn btn-success btn-sm btn-info"><i class="fa fa-reply" style="float: none;"></i> &nbsp;
+<a href="?/<?=$page?>" data-placement="bottom" title="Go to dashboard"><button style="padding: 0.4em;" type="button" name="exit" class="btn btn-primary btn-sm btn-info"><i class="fa fa-reply" style="float: none;"></i> &nbsp;
 <span>Back</span> </button></a>
 </div>
 </div>
@@ -200,7 +211,7 @@ if($error!='')
 <? } 
  elseif($part=='2') { ?><div class='col-md-8 offset-2'>
                 <div class='x_panel'>
-                  <div class='x_title'>
+                  <div class='x_title' style="color: #007bff;">
                     <h2><?=ucwords($title);?><small>update entry</small></h2>
 					<ul class='nav navbar-right panel_toolbox'>
                       <li><a class='link'><i class='fa fa-chevron-up'></i></a>
@@ -225,22 +236,22 @@ if($error!='')
 <div class="col-md">
 
  
- <button data-placement="bottom" title="Update data" type="submit" name="county_update" style="padding: 0.4em;" class="btn btn-success btn-sm"><span>Update</span>  <i class="fa fa-save"></i></button>
+ <button data-placement="bottom" title="Update data" type="submit" name="county_update" style="padding: 0.4em;" class="btn btn-primary btn-sm"><span>Update</span>  <i class="fa fa-save"></i></button>
 
 &nbsp; &nbsp; 
 
 <a href="?/<?=$page?>&D=<? echo osteens('part=1')?>" data-placement="bottom" title="Add New Record">
-<button type="button" name="new" style="padding: 0.4em;" class="btn btn-success btn-sm"><span>New</span>  <i class="fa fa-file custom"></i></button></a>
+<button type="button" name="new" style="padding: 0.4em;" class="btn btn-primary btn-sm"><span>New</span>  <i class="fa fa-file custom"></i></button></a>
 
 &nbsp; &nbsp; 
 
 <a href="?/<?=$page?>" data-placement="bottom" title="Go to records">
-<button type="button" name="exit" style="padding: 0.4em;" class="btn btn-success btn-sm">
+<button type="button" name="exit" style="padding: 0.4em;" class="btn btn-primary btn-sm">
 <span>View</span>  <i class="fa fa-search custom"></i></button></a>
 
  &nbsp; &nbsp;
 
-<a href="?/<?=$page?>" data-placement="bottom" title="Go to dashboard"><button style="padding: 0.4em;" type="button" name="exit" class="btn btn-success btn-sm"><i class="fa fa-reply" style="float: none;"></i> &nbsp;
+<a href="?/<?=$page?>" data-placement="bottom" title="Go to dashboard"><button style="padding: 0.4em;" type="button" name="exit" class="btn btn-primary btn-sm"><i class="fa fa-reply" style="float: none;"></i> &nbsp;
 <span>Back</span>  </button></a>
  
 
@@ -255,11 +266,15 @@ if($error!='')
 </div>
 <?  } else { ?>
 <div class="col-md-12 col-sm-12 col-xs-12">
-<div class="x_panel">
-                  <div class="x_title">
-                    <h2><?=ucwords($title);?><small> existing records</small></h2>
-					<ul class="nav navbar-right panel_toolbox">
-                     <li><a href="?/<?=$page?>&D=<? echo osteens('part=1')?>" class="link"><i class="fa fa-plus"></i> Create</a>
+<div class="x_panel" style="background:#fff; border:1px solid #eee; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.06); padding:20px;">
+                  <div class="x_title" style="border:none; margin-bottom:15px; display:flex; align-items:center; justify-content:space-between;">
+                    <div style="color:#c98a3e; font-size:14px;">
+                      <span style="color:#c98a3e;">&raquo;</span> <?=ucwords($title);?> existing records
+                    </div>
+					<ul class="nav navbar-right panel_toolbox" style="margin:0;">
+                     <li>
+                     <a href="?/<?=$page?>&D=<? echo osteens('part=1')?>" class="btn btn-primary" style="background-color:#3aa0e8 !important; border-color:#3aa0e8 !important; color:#fff !important; border-radius:20px; padding:8px 18px; font-weight:600; font-size:13px;"><i class="fa fa-plus"></i>&nbsp; Create New</a>
+                     </li>
                      </ul>
 					<div class="clearfix"></div>
                   </div>
@@ -267,26 +282,26 @@ if($error!='')
 
  											 
 												 
-<table id="datatable" style="width: 100%;" role="grid" aria-describedby="datatable_info" class="table table-striped table-bordered dataTable table-sm">
+<table id="datatable" style="width: 100%; border-collapse: collapse;" role="grid" aria-describedby="datatable_info" class="table table-striped table-bordered dataTable table-sm">
 <thead>
 <tr>
-<th width="1px">#</th>
-<th>Name</th>
-<th>Created By</th>
-<th>Created On</th>
-<th>Sub-county</th>
-<th width="1%">Edit</th> <th width="1%">Del</th> </tr>
+<th width="1px" style="border:1px solid #e6e6e6; background:#f4f6f9; color:#3aa0e8; font-weight:600;">#</th>
+<th style="border:1px solid #e6e6e6; background:#f4f6f9; color:#3aa0e8; font-weight:600;">Name</th>
+<th style="border:1px solid #e6e6e6; background:#f4f6f9; color:#3aa0e8; font-weight:600;">Created By</th>
+<th style="border:1px solid #e6e6e6; background:#f4f6f9; color:#3aa0e8; font-weight:600;">Created On</th>
+<th style="border:1px solid #e6e6e6; background:#f4f6f9; color:#3aa0e8; font-weight:600;">Sub-county</th>
+<th width="1%" style="border:1px solid #e6e6e6; background:#f4f6f9; color:#3aa0e8; font-weight:600;">Edit</th> <th width="1%" style="border:1px solid #e6e6e6; background:#f4f6f9; color:#3aa0e8; font-weight:600;">Del</th> </tr>
 </thead>
 <tfoot>
 <tr>
-<th>#</th>
-<th>Name</th>
-<th>Created By</th>
-<th>Created On</th>
-<th>Sub-county</th>
-<th></th>
-<th>
-<button   name="county_delete" value="Delete" type="submit" class="button sample btn-sm btn-secondary btntim-sample btntim-nbuttun" onClick="javascript: return confirm('Please confirm deletion');" /><i class="fa fa-trash"></i></button>
+<th style="border:1px solid #e6e6e6; background:#f4f6f9; color:#3aa0e8; font-weight:600;">#</th>
+<th style="border:1px solid #e6e6e6; background:#f4f6f9; color:#3aa0e8; font-weight:600;">Name</th>
+<th style="border:1px solid #e6e6e6; background:#f4f6f9; color:#3aa0e8; font-weight:600;">Created By</th>
+<th style="border:1px solid #e6e6e6; background:#f4f6f9; color:#3aa0e8; font-weight:600;">Created On</th>
+<th style="border:1px solid #e6e6e6; background:#f4f6f9; color:#3aa0e8; font-weight:600;">Sub-county</th>
+<th style="border:1px solid #e6e6e6; background:#f4f6f9;"></th>
+<th style="border:1px solid #e6e6e6; background:#f4f6f9;">
+<button   name="county_delete" value="Delete" type="submit" class="button sample btn-sm btn-danger btntim-sample btntim-nbuttun" onClick="javascript: return confirm('Please confirm deletion');" /><i class="fa fa-trash"></i></button>
 
 </th> 
 </tr>
@@ -304,15 +319,22 @@ $result = mysqli_query($conn,"SELECT * FROM county");
   while($row = mysqli_fetch_assoc($result))
     { $mycount=$mycount+1; ?> 				  
 <tr>
-<td><?=$mycount?></td>
-<td><? echo $row['name']?></td>
-<td><? echo $row['created_by']?></td>
-<td><? echo $row['created_on']?></td>
-<td align="center"><a href="?/subcounty&D=cGFydD0x&p=<?=$row['logid']?>"><i class="fa fa-lg fa-cog"></i></a></td>
-<td  align="center"><? $edit="part=2&rec=".$row['logid']; ?>
+<td style="border:1px solid #e6e6e6;"><?=$mycount?></td>
+<td style="border:1px solid #e6e6e6;"><? echo $row['name']?></td>
+<td style="border:1px solid #e6e6e6;"><? echo $row['created_by']?></td>
+<td style="border:1px solid #e6e6e6;"><? echo $row['created_on']?></td>
+<td style="border:1px solid #e6e6e6;" align="center"><a href="?/subcounty&D=cGFydD0x&p=<?=$row['logid']?>"><i class="fa fa-lg fa-cog"></i></a></td>
+<td style="border:1px solid #e6e6e6;"  align="center"><? $edit="part=2&rec=".$row['logid']; ?>
   <a href="?/<?=$page?>&D=<? echo osteens($edit)?>" data-placement="bottom" title="Go to edit"><i class="fa fa-lg fa-pencil"></i></a></td>
-<td   align="center">
+<td style="border:1px solid #e6e6e6;"   align="center">
 <input name="del[]" id="del[]" type="checkbox" value="<?=$row['logid']?>" />
+</td>
+</tr>
+<? } 
+if($mycount==0) { ?>
+<tr>
+<td colspan="7" align="center" style="border:1px solid #e6e6e6; padding:20px; font-style:italic; color:#888;">
+No county records found. Click <a href="?/<?=$page?>&D=<? echo osteens('part=1')?>" style="color:#3aa0e8; text-decoration:underline;">Create New</a> to get started.
 </td>
 </tr>
 <? } ?>
@@ -332,4 +354,3 @@ $result = mysqli_query($conn,"SELECT * FROM county");
 <? } ?>
 
 <?php //include("footer.php"); ?>
-					 

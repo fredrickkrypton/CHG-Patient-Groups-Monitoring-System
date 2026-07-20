@@ -11,7 +11,18 @@ Copyright (C) Innovee Systems Erps.This program should NOT be distributed  WITHO
  
 //include('header.php');
 $page="group_statement";
-workout($_GET['D']);
+if (!function_exists('workout') && file_exists(__DIR__ . '/server.php')) {
+    require_once(__DIR__ . '/server.php');
+}
+
+if (function_exists('workout') && isset($_GET['D'])) { 
+    workout($_GET['D']); 
+}
+
+// Pre-initialize variables to prevent notice chains
+if (!isset($part)) { 
+    $part = ''; 
+}
 $timestamp=date('Y-m-d H:i:s');
 
 if($part=='') { caniacess($page."_view"); }

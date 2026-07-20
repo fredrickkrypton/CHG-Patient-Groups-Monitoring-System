@@ -1,13 +1,23 @@
 <?
-workout($_GET['D']);
+
+
+
+// SAFE CHECK: Ensure core helper functions (workout, caniacess, get_access, checked, _title, audittrail) are loaded
+if (!function_exists('workout') && file_exists(__DIR__ . '/server.php')) {
+    require_once(__DIR__ . '/server.php');
+}
+
+
 $page="roles_access";
 $timestamp=date('Y-m-d H:i:s');
  $part=1;
  $rec=1;
-if($part=='') { caniacess($page."_view"); }
-if($part=='1') { caniacess($page."_add"); }
-if($part=='2') { caniacess($page."_edit"); }
-if(isset($_POST['delete'])) { caniacess($page."_delete"); }
+if(function_exists('caniacess')) {
+    if($part=='') { caniacess($page."_view"); }
+    if($part=='1') { caniacess($page."_add"); }
+    if($part=='2') { caniacess($page."_edit"); }
+    if(isset($_POST['delete'])) { caniacess($page."_delete"); }
+}
 if($_SESSION['stop']==1)
 {  include('stop.php'); }
 else 
@@ -66,7 +76,7 @@ if($error!='')
                                   styling: 'bootstrap3'
                               }); }) </script>";
 }
-get_access($conn,$_SESSION['userrole']);
+if(function_exists('get_access')) { get_access($conn,$_SESSION['userrole']); }
 }  
  
  //---------------------------------------------------------------------------------------------------- 
@@ -77,7 +87,7 @@ get_access($conn,$_SESSION['userrole']);
  if(isset($_POST['delete']))
 { }
  //---------------------------------------------------------------------------------------------------- 
- _title($title='Page access'); ?>
+ if(function_exists('_title')) { _title($title='Page access'); } ?>
 
 <form method='POST' action='' class='rounded' name='roles_access' style='min-width:70%'  enctype='multipart/form-data'>
 <? if($part=='1')
@@ -158,7 +168,7 @@ $countgroup=0;
     <td align="left"> <?=ucwords(str_replace("_"," ",str_replace("and"," & ",$drow['pagename'])));?>
     <input type="hidden" name="pages[<? echo $counts-1?>]" value="<? echo $drow['logid'];?>" id="$countgroup"/> </td>
     <td>
-    <? $access=checked($conn,$roleid,$drow['logid']);?>
+    <? $access=function_exists('checked') ? checked($conn,$roleid,$drow['logid']) : '';?>
     <input type="checkbox" name="view[<? echo $counts-1?>]"  id="view<? echo $countgroup?>" value="Yes" <? if(explode(",",$access)[0]=="Yes") { echo "checked"; } ?> <? if($drow['sview']=="0") { echo 'hidden'; }?> /></td>
     <td><input type="checkbox" name="canadd[<? echo $counts-1?>]" id="add<? echo $countgroup?>"  value="Yes"  <? if(explode(",",$access)[1]=="Yes") { echo "checked"; } ?> <? if($drow['sadd']=="0") { echo 'hidden'; }?> /></td>
     <td><input type="checkbox" name="canedit[<? echo $counts-1?>]" id="edit<? echo $countgroup?>"  value="Yes"  <? if(explode(",",$access)[2]=="Yes") { echo "checked"; } ?> <? if($drow['sedit']=="0") { echo 'hidden'; }?>/></td>
@@ -210,7 +220,7 @@ $countgroup=0;
                   <div class="x_title">
                     <h2>Existing<small><?=ucwords($page);?></small></h2>
 					<ul class="nav navbar-right panel_toolbox">
-                     <li><a href="?/<?=$page?>&D=<? echo osteens('part=1')?>" class="collapse-link"><i class="fa fa-plus"></i> Manage</a>
+                     <li><a href="?/<?=$page?>&D=<? echo function_exists('osteens') ? osteens('part=1') : ''; ?>" class="collapse-link"><i class="fa fa-plus"></i> Manage</a>
                      </ul>
 					<div class="clearfix"></div>
                   </div>
@@ -273,4 +283,187 @@ $qresult = mysqli_query($conn,"SELECT  filename FROM roles_pages WHERE logid='".
  
   <? } ?>
 </form>
+<style>
+  /* Container Panels & General Typography */
+.x_panel {
+    background: #ffffff;
+    border: 1px solid #e6e9ed;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+    margin-bottom: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.x_title h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+    float: left;
+}
+
+/* Form Dropdown Area Styling */
+.item.form-group.btnflat {
+    background: #f8f9fa;
+    border-left: 4px solid #3498db;
+    padding: 15px 20px;
+    border-radius: 4px;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.item.form-group.btnflat label {
+    margin: 0;
+    color: #34495e;
+    font-size: 14px;
+}
+
+.form-control.manda {
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 14px;
+    color: #495057;
+    transition: border-color 0.15s ease-in-out;
+    background-color: #fff;
+    width: 100%;
+    max-width: 300px;
+}
+
+.form-control.manda:focus {
+    border-color: #3498db;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+/* Modern Data Table Grids */
+.table {
+    width: 100%;
+    margin-bottom: 20px;
+    border-collapse: collapse;
+    background-color: transparent;
+}
+
+.table th, 
+.table td {
+    padding: 12px 15px;
+    vertical-align: middle;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 14px;
+}
+
+/* Table Header Row */
+.table tr[style*="background-color:#666"] {
+    background-color: #2c3e50 !important;
+    color: #ffffff !important;
+}
+
+.table tr[style*="background-color:#666"] td {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    border: none;
+}
+
+/* Module Category Group Header Breaks */
+.table td[style*="background-color:#CCC"] {
+    background-color: #edf2f7 !important;
+    color: #2d3748 !important;
+    font-weight: 700 !important;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    border-top: 2px solid #cbd5e0;
+    border-bottom: 2px solid #cbd5e0;
+    padding: 10px 15px;
+}
+
+/* Checkbox alignment & Custom scaling */
+.table input[type="checkbox"] {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    accent-color: #2ecc71; /* Modern green accent tint for checked values */
+    vertical-align: middle;
+}
+
+/* Quick Feature Select Buttons (Check/Uncheck Inline controls) */
+.btnflat[type="button"] {
+    border: 1px solid #dcdde1;
+    background: #f8f9fa;
+    color: #2f3542;
+    padding: 4px 10px;
+    font-size: 11px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 2px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Color Check (✔) buttons green on hover */
+.btnflat[value="✔"]:hover {
+    background-color: #2ecc71;
+    border-color: #2ecc71;
+    color: #ffffff;
+}
+
+/* Color Uncheck (✘) buttons red on hover */
+.btnflat[value="✘"]:hover {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+    color: #ffffff;
+}
+
+/* Action Execution Buttons Block */
+.form-group.row.text-center {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+}
+
+.btn-success {
+    background-color: #2ecc71;
+    border-color: #2ecc71;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 8px 20px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.btn-success:hover {
+    background-color: #27ae60;
+    border-color: #27ae60;
+}
+
+.btn-info {
+    background-color: #34495e;
+    border-color: #34495e;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 8px 20px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.btn-info:hover {
+    background-color: #2c3e50;
+    border-color: #2c3e50;
+}
+
+/* Table Striping Alternate Effects */
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.01);
+}
+
+.table-striped tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.04);
+}
+</style>
 <? } ?>

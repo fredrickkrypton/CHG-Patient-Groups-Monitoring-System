@@ -1,253 +1,207 @@
-<?php  
-// Safely check if a session is already active before trying to start one
+<?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Initialize variables to stop PHP 8 warnings
-$hide = "";
 $messg = "";
 
-if (!isset($_SESSION['fixedlogintime'])) { $_SESSION['fixedlogintime'] = ''; }
-if (!isset($_SESSION['fixeduser'])) { $_SESSION['fixeduser'] = ''; }
-if (!isset($_SESSION['fixedpass'])) { $_SESSION['fixedpass'] = ''; }
-
-// If they are already fully authenticated, bypass form and go to dashboard
+// If already authenticated, skip to dashboard
 if (isset($_SESSION['userusername']) && $_SESSION['userusername'] != '') {
     header("Location: index.php");
     exit();
 }
 
-// --- AUTHENTICATION BACKEND LOGIC ---
 if (isset($_POST['login'])) {
-    include('db.php'); 
-    
+    include('db.php');
+
     $username = mysqli_real_escape_string($conn, $_POST['username']);
     $password = mysqli_real_escape_string($conn, $_POST['password']);
     $md5_password = md5($password);
-    
+
     $query = "SELECT * FROM `0_users` WHERE `username`='$username' AND `password`='$md5_password' AND `active`='Active'";
     $result = mysqli_query($conn, $query);
-    
-    if (mysqli_num_rows($result) > 0) {
+
+    if ($result && mysqli_num_rows($result) > 0) {
         $user = mysqli_fetch_assoc($result);
-        
-        // Populate system session keys
-        $_SESSION['userusername'] = $user['username'];
+
+        $_SESSION['userusername']  = $user['username'];
         $_SESSION['userfullnames'] = $user['fullnames'];
-        $_SESSION['userrole'] = $user['role'];
-        $_SESSION['userprofpic'] = $user['profpic'];
-        
-        // Force session storage save before redirecting
+        $_SESSION['userrole']      = $user['role'];
+        $_SESSION['userprofpic']   = $user['profpic'];
+
+        // Populate access permissions for this role so caniacess() works on every page
+        if (!function_exists('get_access')) {
+            require_once(__DIR__ . '/server.php');
+        }
+        get_access($conn, $user['role']);
+
         session_write_close();
         header("Location: index.php");
         exit();
     } else {
-        echo "<script>alert('Invalid Username or Password!');</script>";
+        $messg = "Invalid username or password.";
     }
 }
 ?>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <!-- Meta, title, CSS, favicons, etc. -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login - CHG Patient Groups Monitoring System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-    <title>LOGIN </title>
-<? echo '
-    <link href="vendors/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
-    <!-- NProgress -->
-    <link href="vendors/nprogress/nprogress.css" rel="stylesheet">
-    <!-- jQuery custom content scroller -->
-    <link href="vendors/malihu-custom-scrollbar-plugin/jquery.mCustomScrollbar.min.css" rel="stylesheet"/>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
 
-<link href="vendors/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet">
-    <!-- bootstrap-datetimepicker -->
-    <link href="vendors/bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.css" rel="stylesheet">
-	
-	  <link href="vendors/normalize-css/normalize.css" rel="stylesheet">
-    <link href="vendors/ion.rangeSlider/css/ion.rangeSlider.css" rel="stylesheet">
-    <link href="vendors/ion.rangeSlider/css/ion.rangeSlider.skinFlat.css" rel="stylesheet">
-    <!-- Bootstrap Colorpicker -->
-    <link href="vendors/mjolnic-bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css" rel="stylesheet">
-     
-	
-	 <!-- PNotify -->
-    <link href="vendors/pnotify/dist/pnotify.css" rel="stylesheet">
-    <link href="vendors/pnotify/dist/pnotify.buttons.css" rel="stylesheet">
-    <link href="vendors/pnotify/dist/pnotify.nonblock.css" rel="stylesheet">
-	
-	 
-	
-    <!-- Custom Theme Style -->
-	 <link href="vendors/datatables.net-bs/css/dataTables.bootstrap.min.css" rel="stylesheet">
-    
-	<link href="build/css/custom.min.css" rel="stylesheet">
-	<link href="ccss.css" rel="stylesheet">
-	';?>
- 
-  <body class="login">
-    <div>
-   
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1ea7e1 0%, #0d6ba8 100%);
+            padding: 20px;
+        }
 
-      <div class="login_wrapper" style="margin-top: 1%;">
-        <div class="animate form login_form">
-          <section class="login_content">
-            <form action="" method="post">
-              <h1>Login Form</h1>
-<style>
- .flip-box {
-background-color: transparent;
-width: 350px;
-height: 100px;
-}
+        .login-card {
+            background: #ffffff;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 380px;
+            padding: 36px 32px 28px;
+            text-align: center;
+        }
 
-/* This container is needed to position the front and back side */
-.flip-box-inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  text-align: center;
-  transition: transform 0.8s;
-  transform-style: preserve-3d;
-}
+        .login-logo {
+            width: 78px;
+            height: 78px;
+            border-radius: 50%;
+            border: 3px solid #1ea7e1;
+            object-fit: contain;
+            background: #ffffff;
+            padding: 4px;
+            margin-bottom: 14px;
+        }
 
-/* Do an horizontal flip when you move the mouse over the flip box container */
-.flip-box:hover .flip-box-inner {
-  transform: rotateY(180deg);
-}
+        .login-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #1a3550;
+            margin: 0 0 2px 0;
+        }
 
-/* Position the front and back side */
-.flip-box-front, .flip-box-back {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  -webkit-backface-visibility: hidden; /* Safari */
-  backface-visibility: hidden;
-}
+        .login-title .brand-chg {
+            color: #e02020;
+        }
 
- 
+        .login-tagline {
+            font-size: 12.5px;
+            color: #8a94a6;
+            margin: 0 0 26px 0;
+            font-style: italic;
+        }
 
-/* Style the back side */
-.flip-box-back {
- 
-  transform: rotateY(180deg);
-}
-</style>   
-               <div class="flip-box">
-  <div class="flip-box-inner">
-    <div class="flip-box-front">
-    <img src="images/eadmin.png"  class="loading_arrow"  height="100">
-    </div>
-    <div class="flip-box-back">
-      <!--<img src="images/eadmin.png"  class="loading_arrow"  height="100">-->
-    </div>
-  </div>
-</div> 
-<div>
-<? if($hide)
-{ ?>	<br><span style="color:red">* Check email for security code.<br><?=$messg?></span>
-<input type="text" class="form-control" placeholder="Security Code" required="" name="secc" id="secc" value="<?=$_POST['secc']?>"/> 
-<? } ?>
+        .form-group {
+            text-align: left;
+            margin-bottom: 16px;
+        }
 
-            <input type="text" class="form-control" placeholder="Username" required="" name="username" id="username" value="<?=$_SESSION['fixeduser']?>" <?=$hide?> />
-              </div>
-              <div>
-                <input type="password" class="form-control" placeholder="Password" required="" name="password" id="password"  value="<?=$_SESSION['fixedpass']?>" <?=$hide?>/>
-                
-              </div>
-              <div align="center">
-                <input name="login" type="submit" style="background-color: burlywood;float: none; margin-left:0;width: 40%;" class="btn btn-default submit" value="<? if($hide=='') { echo "Proceed"; } else { echo "Log in"; }  ?>"> 
-              </div>
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #57606f;
+            margin-bottom: 6px;
+        }
 
-              <div class="clearfix"></div>
+        .form-group input {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid #d5dbe3;
+            border-radius: 7px;
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
 
-              <div class="separator">
-                 
-                <div>
-                  <!--<h1 style="font-size: 10;"><i class="fa fa-paw"></i> Innovee Systems</h1>-->
-                  <p>©<?=date("Y")?> All Rights Reserved.</p>
-                </div>
-              </div>
-            </form>
-          </section>
+        .form-group input:focus {
+            outline: none;
+            border-color: #1ea7e1;
+            box-shadow: 0 0 0 3px rgba(30, 167, 225, 0.15);
+        }
+
+        .btn-login {
+            width: 100%;
+            background: #1ea7e1;
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            border-radius: 7px;
+            cursor: pointer;
+            margin-top: 6px;
+            transition: background 0.2s;
+        }
+
+        .btn-login:hover {
+            background: #0d6ba8;
+        }
+
+        .login-error {
+            background: #fdeaea;
+            color: #e02020;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+
+        .login-footer {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #eef1f5;
+            font-size: 11.5px;
+            color: #a4b0be;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <img src="images/chg-logo.jpg" alt="CHG Logo" class="login-logo"
+             onerror="this.style.display='none';">
+
+        <h1 class="login-title"><span class="brand-chg">CHG</span> Patient Groups Monitoring System</h1>
+        <p class="login-tagline">"Bettering Health Care Together"</p>
+
+        <?php if (!empty($messg)) { ?>
+            <div class="login-error"><?php echo htmlspecialchars($messg); ?></div>
+        <?php } ?>
+
+        <form action="" method="post">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+
+            <button type="submit" name="login" class="btn-login">Log In</button>
+        </form>
+
+        <div class="login-footer">
+            &copy; <?php echo date('Y'); ?> City Health Group Limited. All Rights Reserved.
         </div>
+    </div>
 
-        <div id="register" class="animate form registration_form">
-          <section class="login_content">
-            <form>
-              <h1>Create Account</h1>
-              <div>
-                <input type="text" class="form-control" placeholder="Username" required="" />
-              </div>
-              <div>
-                <input type="email" class="form-control" placeholder="Email" required="" />
-              </div>
-              <div>
-                <input type="password" class="form-control" placeholder="Password" required="" />
-              </div>
-              <div>
-                <a class="btn btn-default submit" href="index.html">Submit</a>
-              </div>
-
-              <div class="clearfix"></div>
-
-              <div class="separator">
-                <p class="change_link">Already a member ?
-                  <a href="#signin" class="to_register"> Log in </a>
-                </p>
-
-                <div class="clearfix"></div>
-                <br />
-
-                <div>
-                   <h5 style="font-size: 20;"><i class="fa fa-paw"></i> Intech Limited</h5>
-                  <p>©<?=date("Y")?> All Rights Reserved.</p>
-                </div>
-              </div>
-            </form>
-          </section>
-        </div>
-      </div>
-    </div> 
-   <script src="vendors/jquery/dist/jquery.min.js"></script>
-<script src="vendors/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="vendors/fastclick/lib/fastclick.js"></script>
-<script src="vendors/nprogress/nprogress.js"></script>
-<script src="vendors/malihu-custom-scrollbar-plugin/jquery.mCustomScrollbar.concat.min.js"></script>
- 
-
-
-
- 
-    <!-- bootstrap-daterangepicker -->
-    <script src="vendors/moment/min/moment.min.js"></script>
-    <script src="vendors/bootstrap-daterangepicker/daterangepicker.js"></script>
-    <!-- bootstrap-datetimepicker -->    
-    <script src="vendors/bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
- 
-    <!-- iCheck -->
-    <script src="vendors/iCheck/icheck.min.js"></script>
-   
-    <script src="vendors/jszip/dist/jszip.min.js"></script>
-    <script src="vendors/pdfmake/build/pdfmake.min.js"></script>
-    <script src="vendors/pdfmake/build/vfs_fonts.js"></script>
-       
-    <script src="vendors/ion.rangeSlider/js/ion.rangeSlider.min.js"></script>
-    <!-- Bootstrap Colorpicker -->
-    <script src="vendors/mjolnic-bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js"></script>
-    <!-- jquery.inputmask -->
-    <script src="vendors/jquery.inputmask/dist/min/jquery.inputmask.bundle.min.js"></script>
-    <!-- jQuery Knob -->
-    <script src="vendors/jquery-knob/dist/jquery.knob.min.js"></script>
-    <!-- Cropper --> 
-
-<!-- PNotify -->
-
-    <script src="vendors/pnotify/dist/pnotify.js"></script>
-    <script src="vendors/pnotify/dist/pnotify.buttons.js"></script>
-    <script src="vendors/pnotify/dist/pnotify.nonblock.js"></script>
-    <!-- Custom Theme Scripts -->
-    <script src="build/js/custom.min.js"></script>
+</body>
+</html>

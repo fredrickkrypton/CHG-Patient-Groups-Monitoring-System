@@ -1,333 +1,334 @@
-<?
+<?php
 /*
-Copyright (C) Innovee Systems Erps.This program should NOT be distributed  WITHOUT ANY WARRANTY and LICENSE.
+Copyright (C) Innovee Systems Erps. This program should NOT be distributed WITHOUT ANY WARRANTY and LICENSE.
 */
 //-----------------------------------------------------------------------------
 //
 //	Coder: Timothy Murunga
 //	Email: murunga@innovee.co.ke
 //	Change: 2023-03-21 20:06:14
- 
- 
-//include('header.php');
-$page="unit_of_measure";
-workout($_GET['D']);
-$timestamp=date('Y-m-d H:i:s');
+
+$page = "unit_of_measure";
+if (!function_exists('workout') && file_exists(__DIR__ . '/server.php')) {
+    require_once(__DIR__ . '/server.php');
+}
+
+// Check if $_GET['D'] is set before processing to avoid the Undefined Key warning
+if (function_exists('workout') && isset($_GET['D'])) { 
+    workout($_GET['D']); 
+}
+
+// Fallback initialization to resolve the Undefined Variable warnings
+if (!isset($part)) {
+    $part = isset($_GET['part']) ? trim($_GET['part']) : '';
+}
+
+$timestamp = date('Y-m-d H:i:s');
 
 if($part=='') { caniacess($page."_view"); }
 if($part=='1') { caniacess($page."_add"); }
 if($part=='2') { caniacess($page."_edit"); }
 if(isset($_POST['unit_of_measure_delete'])) { caniacess($page."_delete"); }
-if($_SESSION['stop']==1)
-{  include('stop.php'); }
-else 
-{
-//$page="unit_of_measure";
 
- if(isset($_POST['unit_of_measure_save']))
-{
-$name=ucwords(($_POST['name']));
-$created_by=ucwords(($username));
-$created_on=ucwords(($timestamp));
+if($_SESSION['stop']==1) {  
+    include('stop.php'); 
+} else {
 
-if(trim($name)!='') { 
-$sql = "INSERT INTO unit_of_measure (name,created_by,created_on)
-VALUES ('$name','$created_by','$created_on')";
-if ($conn->query($sql) === TRUE) {  $alert=1; audittrail($conn,'unit_of_measure','','inserting',$timestamp,$username); }
- else { $error=("Error: you are duplicating data!"); }
- }   else {  $error="Fill all mandatory fields in red.";  }  
-if($alert!='')
-{
-	echo "<script> window.addEventListener('load', function () { 
-	new PNotify({
-                                  title: 'Success',
-                                  text: 'Data saved successfully!',
-								  nonblock: { nonblock: !0 },
-                                  type: 'success',
-                                  styling: 'bootstrap3'
-                              }); }) </script>";
-}
-if($error!='')
-{
-	echo "<script> window.addEventListener('load', function () { 
-	new PNotify({
-                                  title: 'Error',
-                                  text: '$error',
-								  nonblock: { nonblock: !0 },
-                                  type: 'error',
-                                  styling: 'bootstrap3'
-                              }); }) </script>";
-}
-}  
+    $alert = '';
+    $error = '';
+    $deleted = 0;
+    $rec = isset($_GET['rec']) ? intval($_GET['rec']) : 0;
+
+    if(isset($_POST['unit_of_measure_save'])) {
+        $name = ucwords(trim($_POST['name'] ?? ''));
+        $created_by = ucwords(($username));
+        $created_on = ucwords(($timestamp));
+
+        if($name != '') { 
+            $sql = "INSERT INTO unit_of_measure (name,created_by,created_on) VALUES ('" . mysqli_real_escape_string($conn, $name) . "','$created_by','$created_on')";
+            if ($conn->query($sql) === TRUE) {  
+                $alert = 1; 
+                audittrail($conn,'unit_of_measure','','inserting',$timestamp,$username); 
+                $part = '';
+            } else { 
+                $error = "Error: you are duplicating data!"; 
+            }
+        } else {  
+            $error = "Fill all mandatory fields in red.";  
+        }  
+        
+        if($alert != '') {
+            echo "<script> window.addEventListener('load', function () { 
+            new PNotify({ title: 'Success', text: 'Data saved successfully!', nonblock: { nonblock: !0 }, type: 'success', styling: 'bootstrap3' }); }) </script>";
+        }
+        if($error != '') {
+            echo "<script> window.addEventListener('load', function () { 
+            new PNotify({ title: 'Error', text: '$error', nonblock: { nonblock: !0 }, type: 'error', styling: 'bootstrap3' }); }) </script>";
+        }
+    }  
  
- //---------------------------------------------------------------------------------------------------- 
- if(isset($_POST['unit_of_measure_update']))
-{
-$name=ucwords(($_POST['name']));
-$created_by=ucwords(($username));
-$created_on=ucwords(($timestamp));
-$logid=$_POST['logid'];
+    //---------------------------------------------------------------------------------------------------- 
+    if(isset($_POST['unit_of_measure_update'])) {
+        $name = ucwords(trim($_POST['name'] ?? ''));
+        $created_by = ucwords(($username));
+        $created_on = ucwords(($timestamp));
+        $logid = intval($_POST['logid'] ?? 0);
 
-if(trim($name)!='') { 
-$sql = "UPDATE  unit_of_measure SET  name='$name',created_by='$created_by',created_on='$created_on' WHERE logid='$logid'";
-if ($conn->query($sql) === TRUE) {  $alert=1; audittrail($conn,'unit_of_measure',$logid,'updatings',$timestamp,$username); }
- else { $error=("Error: you are duplicating data!"); }
- }   else {  $error="Fill all mandatory fields in red.";  }  
-if($alert!='')
-{
-	echo "<script> window.addEventListener('load', function () { 
-	new PNotify({
-                                  title: 'Success',
-                                  text: 'Data updated successfully!',
-								  nonblock: { nonblock: !0 },
-                                  type: 'success',
-                                  styling: 'bootstrap3'
-                              }); }) </script>";
-}
-if($error!='')
-{
-	echo "<script> window.addEventListener('load', function () { 
-	new PNotify({
-                                  title: 'Error',
-                                  text: '$error',
-								  nonblock: { nonblock: !0 },
-                                  type: 'error',
-                                  styling: 'bootstrap3'
-                              }); }) </script>";
-}
-}  
+        if($name != '' && $logid > 0) { 
+            $sql = "UPDATE unit_of_measure SET name='" . mysqli_real_escape_string($conn, $name) . "',created_by='$created_by',created_on='$created_on' WHERE logid='$logid'";
+            if ($conn->query($sql) === TRUE) {  
+                $alert = 1; 
+                audittrail($conn,'unit_of_measure',$logid,'updatings',$timestamp,$username); 
+                $part = '';
+            } else { 
+                $error = "Error: you are duplicating data!"; 
+            }
+        } else {  
+            $error = "Fill all mandatory fields in red.";  
+        }  
+        
+        if($alert != '') {
+            echo "<script> window.addEventListener('load', function () { 
+            new PNotify({ title: 'Success', text: 'Data updated successfully!', nonblock: { nonblock: !0 }, type: 'success', styling: 'bootstrap3' }); }) </script>";
+        }
+        if($error != '') {
+            echo "<script> window.addEventListener('load', function () { 
+            new PNotify({ title: 'Error', text: '$error', nonblock: { nonblock: !0 }, type: 'error', styling: 'bootstrap3' }); }) </script>";
+        }
+    }  
  
- //---------------------------------------------------------------------------------------------------- 
- if(isset($_POST['unit_of_measure_delete']))
-{ 
-$count = $_POST['txtcount'];
-for($i=0;$i<$count;$i++){ 
-      if($_POST['del'][$i]!='')
-	  { 
-	  audittrail($conn,'unit_of_measure',$_POST['del'][$i],'deleting',$timestamp,$username);
-	  
-     $sql = "DELETE FROM unit_of_measure  WHERE logid='".$_POST['del'][$i]."'";
-if ($conn->query($sql) === TRUE) { $deleted=$deleted+1; }
-	  }  
-   } 
-	  if ($deleted>0) { $alert=1; } else { $error="No record selected"; }
-if($alert!='')
-{
-	echo "<script> window.addEventListener('load', function () { 
-	new PNotify({
-                                  title: 'Success',
-                                  text: 'Deleted successfully',
-								  nonblock: { nonblock: !0 },
-                                  type: 'success',
-                                  styling: 'bootstrap3'
-                              }); }) </script>";
-}
-if($error!='')
-{
-	echo "<script> window.addEventListener('load', function () { 
-	new PNotify({
-                                  title: 'Error',
-                                  text: '',
-								  nonblock: { nonblock: !0 },
-                                  type: 'error',
-                                  styling: 'bootstrap3'
-                              }); }) </script>";
-}	  
-}
- //---------------------------------------------------------------------------------------------------- 
- _title($title='Unit Of Measure'); ?>
+    //---------------------------------------------------------------------------------------------------- 
+    if(isset($_POST['unit_of_measure_delete'])) { 
+        $count = intval($_POST['txtcount'] ?? 0);
+        for($i=0;$i<$count;$i++){ 
+            if(!empty($_POST['del'][$i])) { 
+                $del_id = mysqli_real_escape_string($conn, $_POST['del'][$i]);
+                audittrail($conn,'unit_of_measure',$del_id,'deleting',$timestamp,$username);
+                $sql = "DELETE FROM unit_of_measure WHERE logid='$del_id'";
+                if ($conn->query($sql) === TRUE) { 
+                    $deleted = $deleted + 1; 
+                }
+            }  
+        } 
+        if ($deleted > 0) { $alert = 1; } else { $error = "No record selected"; }
+        
+        if($alert != '') {
+            echo "<script> window.addEventListener('load', function () { 
+            new PNotify({ title: 'Success', text: 'Deleted successfully', nonblock: { nonblock: !0 }, type: 'success', styling: 'bootstrap3' }); }) </script>";
+        }
+        if($error != '') {
+            echo "<script> window.addEventListener('load', function () { 
+            new PNotify({ title: 'Error', text: '$error', nonblock: { nonblock: !0 }, type: 'error', styling: 'bootstrap3' }); }) </script>";
+        }	  
+    }
+    
+    //---------------------------------------------------------------------------------------------------- 
+    _title($title='Unit Of Measure'); 
+    ?>
 
-<form method='POST' action='' class='rounded' name='unit_of_measure' style='min-width:70%'  enctype='multipart/form-data'>
+    <!-- Native Styling Uniformity Integration Layer -->
+    <style>
+        .chg-container {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #ffffff;
+            border-radius: 6px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-top: 10px;
+        }
+        .chg-view-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eef2f5;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+        .chg-view-title {
+            font-size: 18px;
+            color: #2c3e50;
+            margin: 0;
+            font-weight: 600;
+        }
+        .chg-blue-btn {
+            background-color: #1ea7e1 !important;
+            color: #ffffff !important;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 4px;
+            text-decoration: none !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+            cursor: pointer;
+        }
+        .chg-blue-btn:hover {
+            background-color: #1586b7 !important;
+            color: #ffffff !important;
+        }
+        .chg-data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            border: 1px solid #dddddd;
+        }
+        .chg-data-table th {
+            background-color: #f2f5f8;
+            color: #333333;
+            font-weight: bold;
+            padding: 12px 10px;
+            border: 1px solid #dddddd;
+            font-size: 13px;
+        }
+        .chg-data-table td {
+            padding: 10px;
+            border: 1px solid #dddddd;
+            font-size: 13px;
+            color: #444444;
+        }
+        .chg-db-error-box {
+            background-color: #fdf2f2;
+            border: 1px solid #f8b4b4;
+            color: #9b1c1c;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+    </style>
 
+    <div class="chg-container">
+        <div class="chg-view-header">
+            <h2 class="chg-view-title">
+                <?= htmlspecialchars(ucwords($title)); ?>
+                <span style="font-size: 13px; color: #7f8c8d; font-weight: normal; margin-left: 5px;">
+                    <?php echo ($part=='1') ? '» New Entry' : (($part=='2') ? '» Update Entry' : '» Existing Records Matrix'); ?>
+                </span>
+            </h2>
+            <?php if ($part != '1') { ?>
+                <div>
+                    <a href="index.php?page=<?=$page?>&part=1" class="chg-blue-btn">
+                        <i class="fa fa-plus"></i> Create New
+                    </a>
+                </div>
+            <?php } ?>
+        </div>
 
-									
-<? if($part=='1')
-{ ?>
+        <form method='POST' action='' name='unit_of_measure' enctype='multipart/form-data' id="uomForm">
+            
+            <?php if($part=='1') { ?>
+                <!-- ==================== CREATE LAYOUT ==================== -->
+                <div style="max-width: 600px; margin-top: 15px;">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display:block; font-weight:bold; font-size:13px; margin-bottom:5px;">Name : <span style="color:#e74c3c;">*</span></label>
+                        <input type="text" required='required' class="form-control" name="name" id="name" placeholder="Name" value="<? echo htmlspecialchars($_POST['name'] ?? '') ?>" autocomplete="off">
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding-top: 15px; border-top:1px solid #eef2f5; display:flex; gap:10px;">
+                        <button type="submit" name="unit_of_measure_save" class="chg-blue-btn"><i class="fa fa-save"></i> Save</button>
+                        <a href="index.php?page=<?=$page?>" class="btn btn-secondary btn-sm" style="padding:7px 14px;">Back</a>
+                    </div>
+                </div>
 
-<div class='col-md-8 offset-2'>
-                <div class='x_panel'>
-                  <div class='x_title'>
-                    <h2><?=ucwords($title);?><small>new entry</small></h2>
-					<ul class='nav navbar-right panel_toolbox'>
-                      <li><a class='link'><i class='fa fa-chevron-up'></i></a>
-                      </li>
-                     </ul>
-					<div class='clearfix'></div>
-                  </div>
-					<div class='x_content  center-block'>
-					
- 
-<!--fields-->
- <div class="item form-group">
-<label for="name" class="col-sm-3 manda">Name : </label>
-<div class="col-sm-8">
-<input type="text"  required='required' class="form-control form-control-sm manda" name="name" id="name" placeholder="Name" value="<? echo $_POST['name']?>" autocomplete="off" onblur="js_validate(this,'general')">
-</div>
-</div>
+            <?php } elseif($part=='2') { ?>
+                <!-- ==================== EDIT LAYOUT ==================== -->
+                <div style="max-width: 600px; margin-top: 15px;">
+                    <?php 
+                    $rec_safe = mysqli_real_escape_string($conn, $rec);
+                    try {
+                        $result = mysqli_query($conn,"SELECT * FROM unit_of_measure WHERE logid='$rec_safe'");
+                        if($row = mysqli_fetch_assoc($result)) { 
+                        ?> 
+                            <div style="margin-bottom: 15px;">
+                                <label style="display:block; font-weight:bold; font-size:13px; margin-bottom:5px;">Name : <span style="color:#e74c3c;">*</span></label>
+                                <input type="text" required='required' class="form-control" name="name" id="name" placeholder="Name" value="<? echo htmlspecialchars($row['name']) ?>" autocomplete="off">
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding-top: 15px; border-top:1px solid #eef2f5; display:flex; gap:10px;">
+                                <button type="submit" name="unit_of_measure_update" class="chg-blue-btn"><i class="fa fa-save"></i> Update</button>
+                                <a href="index.php?page=<?=$page?>" class="btn btn-secondary btn-sm" style="padding:7px 14px;">Cancel</a>
+                            </div>
+                            <input name="logid" type="hidden" value="<?=$row['logid']?>" />
+                        <?php 
+                        }
+                    } catch (mysqli_sql_exception $e) {
+                        echo "<div class='chg-db-error-box'><i class='fa fa-exclamation-triangle'></i> <strong>Database Notice:</strong> Table missing. Please construct the 'unit_of_measure' table inside phpMyAdmin.</div>";
+                    }
+                    ?> 
+                </div>
 
+            <?php } else { ?>
+                <!-- ==================== DATA GRID TABLE LAYOUT ==================== -->
+                <div style="overflow-x: auto; width:100%;">
+                    <table class="chg-data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px; text-align: center;">#</th>
+                                <th>Name</th>
+                                <th>Created By</th>
+                                <th>Created On</th>
+                                <th style="width: 70px; text-align: center;">Edit</th> 
+                                <th style="width: 70px; text-align: center;">Del</th> 
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <?php 
+                        $mycount = 0;
+                        $table_exists = true;
 
+                        try {
+                            if(isset($_POST['tbn_search'])) {
+                                $search = mysqli_real_escape_string($conn, $_POST['search'] ?? '');
+                                $result = mysqli_query($conn,"SELECT * FROM unit_of_measure WHERE name LIKE '%$search%' OR created_by LIKE '%$search%' OR created_on LIKE '%$search%'");
+                            } else {
+                                $result = mysqli_query($conn,"SELECT * FROM unit_of_measure ORDER BY logid DESC");
+                            }
 
-<br />
-<div class="ln_solid"></div>
-<div class="form-group row text-center">
-<div class="col-md">
-
- <button data-placement="bottom" title="Save data" type="submit" name="unit_of_measure_save" style="padding: 0.4em;" class="btn btn-success btn-sm"><span>Save</span>  <i class="fa fa-save"></i></button>
- 
-
-&nbsp; &nbsp;
-
-<a href="?/<?=$page?>&D=<? echo osteens('part=1')?>" data-placement="bottom" title="Add New Record">
-<button type="button" name="new" style="padding: 0.4em;" class="btn btn-success btn-sm"><span>New</span>  <i class="fa fa-file custom"></i></button></a>
-
-&nbsp; &nbsp;
-
-<a href="?/<?=$page?>" data-placement="bottom" title="Go to records">
-<button type="button" name="exit" style="padding: 0.4em;" class="btn btn-success btn-sm">
-<span>View</span>  <i class="fa fa-search custom"></i></button></a>
-
-&nbsp; &nbsp;
-
-<a href="?/<?=$page?>" data-placement="bottom" title="Go to dashboard"><button style="padding: 0.4em;" type="button" name="exit" class="btn btn-success btn-sm btn-info"><i class="fa fa-reply" style="float: none;"></i> &nbsp;
-<span>Back</span> </button></a>
-</div>
-</div>
-</div>
-</div>
-</div>
-
-
-<? } 
- elseif($part=='2') { ?><div class='col-md-8 offset-2'>
-                <div class='x_panel'>
-                  <div class='x_title'>
-                    <h2><?=ucwords($title);?><small>update entry</small></h2>
-					<ul class='nav navbar-right panel_toolbox'>
-                      <li><a class='link'><i class='fa fa-chevron-up'></i></a>
-                      </li>
-                     </ul>
-					<div class='clearfix'></div>
-                  </div>
-					<div class='x_content center-block'>
-
-<!--fields-->
-<? $result = mysqli_query($conn,"SELECT * FROM unit_of_measure WHERE  logid='$rec'");
-  while($row = mysqli_fetch_assoc($result))
-    { ?> 
-<div class="item form-group"><label for="name" class="col-sm-3 manda">Name : </label>
-<div class="col-sm-8"> 
-<input type="text"  required='required' class="form-control form-control-sm manda" name="name" id="name" placeholder="Name" value="<? echo $row['name']?>" autocomplete="off"  onblur="js_validate(this,'general')">
-</div>
-</div>
-<br />
-<div class="ln_solid"></div>
-<div class="form-group row text-center">
-<div class="col-md">
-
- 
- <button data-placement="bottom" title="Update data" type="submit" name="unit_of_measure_update" style="padding: 0.4em;" class="btn btn-success btn-sm"><span>Update</span>  <i class="fa fa-save"></i></button>
-
-&nbsp; &nbsp; 
-
-<a href="?/<?=$page?>&D=<? echo osteens('part=1')?>" data-placement="bottom" title="Add New Record">
-<button type="button" name="new" style="padding: 0.4em;" class="btn btn-success btn-sm"><span>New</span>  <i class="fa fa-file custom"></i></button></a>
-
-&nbsp; &nbsp; 
-
-<a href="?/<?=$page?>" data-placement="bottom" title="Go to records">
-<button type="button" name="exit" style="padding: 0.4em;" class="btn btn-success btn-sm">
-<span>View</span>  <i class="fa fa-search custom"></i></button></a>
-
- &nbsp; &nbsp;
-
-<a href="?/<?=$page?>" data-placement="bottom" title="Go to dashboard"><button style="padding: 0.4em;" type="button" name="exit" class="btn btn-success btn-sm"><i class="fa fa-reply" style="float: none;"></i> &nbsp;
-<span>Back</span>  </button></a>
- 
-
-</div>
-</div>
-</div> 
-<input name="logid" type="hidden" value="<?=$row['logid']?>" />
- <? } ?> 
-
-
-</div>
-</div>
-<?  } else { ?>
-<div class="col-md-12 col-sm-12 col-xs-12">
-<div class="x_panel">
-                  <div class="x_title">
-                    <h2><?=ucwords($title);?><small> existing records</small></h2>
-					<ul class="nav navbar-right panel_toolbox">
-                     <li><a href="?/<?=$page?>&D=<? echo osteens('part=1')?>" class="link"><i class="fa fa-plus"></i> Create</a>
-                     </ul>
-					<div class="clearfix"></div>
-                  </div>
-<div class="x_content">
-
- 											 
-												 
-<table id="datatable" style="width: 100%;" role="grid" aria-describedby="datatable_info" class="table table-striped table-bordered dataTable table-sm">
-<thead>
-<tr>
-<th width="1px">#</th>
-<th>Name</th>
-<th>Created By</th>
-<th>Created On</th>
-<th width="1%">Edit</th> <th width="1%">Del</th> </tr>
-</thead>
-<tfoot>
-<tr>
-<th>#</th>
-<th>Name</th>
-<th>Created By</th>
-<th>Created On</th>
-<th></th>
-<th>
-<button   name="unit_of_measure_delete" value="Delete" type="submit" class="button sample btn-sm btn-secondary btntim-sample btntim-nbuttun" onClick="javascript: return confirm('Please confirm deletion');" /><i class="fa fa-trash"></i></button>
-
-</th> 
-</tr>
-</tfoot>
-<tbody>
-<? $mycount=0;
- if(isset($_POST['tbn_search']))
-{
-$search=$_POST['search'];
-$result = mysqli_query($conn,"SELECT * FROM unit_of_measure where name like '%$search%' OR created_by like '%$search%' OR created_on like '%$search%'");
- }
-else {
-$result = mysqli_query($conn,"SELECT * FROM unit_of_measure");
-}
-  while($row = mysqli_fetch_assoc($result))
-    { $mycount=$mycount+1; ?> 				  
-<tr>
-<td><?=$mycount?></td>
-<td><? echo $row['name']?></td>
-<td><? echo $row['created_by']?></td>
-<td><? echo $row['created_on']?></td>
-
-<td  align="center"><? $edit="part=2&rec=".$row['logid']; ?>
-<a href="?/<?=$page?>&D=<? echo osteens($edit)?>" data-placement="bottom" title="Go to edit"><i class="fa fa-lg fa-pencil"></i></a></td>
-<td   align="center">
-<input name="del[]" id="del[]" type="checkbox" value="<?=$row['logid']?>" />
-</td>
-</tr>
-<? } ?>
-
-</tbody>
-</table>
-<input type="hidden" name="txtcount" id="txtcount" value="<? echo $mycount;?>"> 
-</div>
- 
- 
-</div>
-</div>
-  <? } ?>
-
- 
-</form>
-<? } ?>
-
-<?php //include("footer.php"); ?>
-					 
+                            if ($result && mysqli_num_rows($result) > 0) {
+                                while($row = mysqli_fetch_assoc($result)) { 
+                                    $mycount++; 
+                                    ?> 				  
+                                    <tr>
+                                        <td style="text-align: center;"><?=$mycount?></td>
+                                        <td><strong><? echo htmlspecialchars($row['name'])?></strong></td>
+                                        <td><? echo htmlspecialchars($row['created_by'])?></td>
+                                        <td><? echo htmlspecialchars($row['created_on'])?></td>
+                                        <td align="center">
+                                            <a href="index.php?page=<?=$page?>&part=2&rec=<?=$row['logid']?>" style="color: #1ea7e1;"><i class="fa fa-pencil"></i> Edit</a>
+                                        </td>
+                                        <td align="center">
+                                            <input name="del[]" type="checkbox" value="<?=$row['logid']?>" style="cursor:pointer;" />
+                                        </td>
+                                    </tr>
+                                <?php 
+                                } 
+                            } else {
+                                echo "<tr><td colspan='6' style='text-align: center; color: #7f8c8d; padding: 25px; font-style: italic;'>No unit of measure records found.</td></tr>";
+                            }
+                        } catch (mysqli_sql_exception $e) {
+                            $table_exists = false;
+                            echo "<tr><td colspan='6' style='padding: 20px; text-align: center;'><div class='chg-db-error-box' style='margin:0;'><i class='fa fa-exclamation-triangle'></i> <strong>Database Error:</strong> Table 'afya.unit_of_measure' does not exist in your database. Please create it using phpMyAdmin to resolve this block.</div></td></tr>";
+                        }
+                        ?>
+                        </tbody>
+                        <?php if ($mycount > 0 && $table_exists) { ?>
+                        <tfoot>
+                            <tr style="background-color: #f5f5f5; font-weight: bold;">
+                                <td colspan="5" style="text-align: right; vertical-align: middle; padding-right:15px;">With Selected Items:</td>
+                                <td style="text-align: center;">
+                                    <button name="unit_of_measure_delete" type="submit" class="btn btn-danger btn-sm" onClick="return confirm('Please confirm deletion of checked records');">
+                                        <i class="fa fa-trash"></i> Del
+                                    </button>
+                                </td>
+                            </tr>
+                        </tfoot>
+                        <?php } ?>
+                    </table>
+                </div>
+                <input type="hidden" name="txtcount" id="txtcount" value="<? echo $mycount;?>"> 
+            <?php } ?>
+        </form>
+    </div>
+<?php } ?>

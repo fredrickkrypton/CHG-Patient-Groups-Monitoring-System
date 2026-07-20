@@ -1,2 +1,2 @@
 <?php
-$_SESSION['conn'] = $conn = @mysqli_connect('localhost:3307', 'root', '', 'afya');
+$_SESSION['conn'] = $conn = mysqli_connect('127.0.0.1', 'root', '', 'afya', 3307);

@@ -54,18 +54,19 @@ else
 // MEMBER SAVE / CREATE LOGIC
 if(isset($_POST['member_save']))
 {
-    $group_id=ucwords(($_POST['group_id']));
-    $name=ucwords(($_POST['name']));
-    $phone_no=ucwords(($_POST['phone_no']));
-    $nat_id=ucwords(($_POST['nat_id']));
-    $dob=dateto_mysql($_POST['dob']);
-    $gender=ucwords(($_POST['gender']));
-    $medical_condition=ucwords(($_POST['medical_condition']));
-    $caregiver_name=ucwords(($_POST['caregiver_name']));
-    $caregiver_phone=ucwords(($_POST['caregiver_phone']));
-    $registration_date=dateto_mysql($_POST['registration_date']);
-    $active=ucwords(($_POST['active']));
-    $activation_dt=dateto_mysql($_POST['activation_dt']);
+    // FIX DEPRECATION WARNINGS: Added null fallbacks ('') to prevent ucwords(null) exceptions
+    $group_id=ucwords(($_POST['group_id'] ?? ''));
+    $name=ucwords(($_POST['name'] ?? ''));
+    $phone_no=ucwords(($_POST['phone_no'] ?? ''));
+    $nat_id=ucwords(($_POST['nat_id'] ?? ''));
+    $dob=dateto_mysql($_POST['dob'] ?? '');
+    $gender=ucwords(($_POST['gender'] ?? ''));
+    $medical_condition=ucwords(($_POST['medical_condition'] ?? ''));
+    $caregiver_name=ucwords(($_POST['caregiver_name'] ?? ''));
+    $caregiver_phone=ucwords(($_POST['caregiver_phone'] ?? ''));
+    $registration_date=dateto_mysql($_POST['registration_date'] ?? '');
+    $active=ucwords(($_POST['active'] ?? ''));
+    $activation_dt=dateto_mysql($_POST['activation_dt'] ?? '');
     $deactivation_dt=isset($_POST['deactivation_dt']) ? dateto_mysql($_POST['deactivation_dt']) : '0000-00-00 00:00:00';
     $user_id=isset($_POST['user_id']) ? ucwords(($_POST['user_id'])) : 0;
     $created_by=(($username));
@@ -92,6 +93,7 @@ if(isset($_POST['member_save']))
             if(function_exists('audittrail')) {
                 audittrail($conn,'member','','inserting',$timestamp,$username); 
             }
+            $part = '';
         } else { 
             $error=("Error: you are duplicating data or system failure!"); 
             if($conn) { $error .= " " . $conn->error; } 
@@ -130,19 +132,20 @@ if(isset($_POST['member_save']))
 // MEMBER UPDATE LOGIC
 if(isset($_POST['member_update']))
 {
-    $group_id=ucwords(($_POST['group_id']));
-    $name=ucwords(($_POST['name']));
-    $phone_no=ucwords(($_POST['phone_no']));
-    $nat_id=ucwords(($_POST['nat_id']));
-    $dob=dateto_mysql($_POST['dob']);
-    $gender=ucwords(($_POST['gender']));
-    $medical_condition=ucwords(($_POST['medical_condition']));
-    $caregiver_name=ucwords(($_POST['caregiver_name']));
-    $caregiver_phone=ucwords(($_POST['caregiver_phone']));
-    $registration_date=dateto_mysql($_POST['registration_date']);
-    $active=ucwords(($_POST['active']));
-    $activation_dt=dateto_mysql($_POST['activation_dt']);
-    $deactivation_dt=dateto_mysql($_POST['deactivation_dt']);
+    // FIX DEPRECATION WARNINGS: Added null fallbacks ('') to prevent ucwords(null) exceptions
+    $group_id=ucwords(($_POST['group_id'] ?? ''));
+    $name=ucwords(($_POST['name'] ?? ''));
+    $phone_no=ucwords(($_POST['phone_no'] ?? ''));
+    $nat_id=ucwords(($_POST['nat_id'] ?? ''));
+    $dob=dateto_mysql($_POST['dob'] ?? '');
+    $gender=ucwords(($_POST['gender'] ?? ''));
+    $medical_condition=ucwords(($_POST['medical_condition'] ?? ''));
+    $caregiver_name=ucwords(($_POST['caregiver_name'] ?? ''));
+    $caregiver_phone=ucwords(($_POST['caregiver_phone'] ?? ''));
+    $registration_date=dateto_mysql($_POST['registration_date'] ?? '');
+    $active=ucwords(($_POST['active'] ?? ''));
+    $activation_dt=dateto_mysql($_POST['activation_dt'] ?? '');
+    $deactivation_dt=dateto_mysql($_POST['deactivation_dt'] ?? '');
     $user_id=isset($_POST['user_id']) ? ucwords(($_POST['user_id'])) : 0;
     $pin=isset($_POST['pin']) ? ucwords(($_POST['pin'])) : '';
     $pin2=isset($_POST['pin2']) ? ucwords(($_POST['pin2'])) : '';
@@ -159,6 +162,7 @@ if(isset($_POST['member_update']))
         if ($conn && $conn->query($sql) === TRUE) {  
             $alert=1; 
             if(function_exists('audittrail')) { audittrail($conn,'member',$logid,'updatings',$timestamp,$username); }
+            $part = '';
         } else { $error=("Error: you are duplicating data!"); }
     } else {  $error="Fill all mandatory fields in red.";  }  
 
@@ -232,482 +236,468 @@ if (function_exists('_title')) {
     _title($title='Member'); 
 } ?>
 
+<!-- Native Styling Uniformity Integration Layer -->
 <style>
-  .custom-table-wrapper {
-    width: 100% !important;
-    overflow-x: auto !important;
-    margin-top: 15px;
-    background: #fff;
-    border: 1px solid #e3e6f0;
-    border-radius: 4px;
-    padding: 10px;
-  }
-  .custom-table-wrapper table {
-    width: 100% !important;
-    max-width: none !important;
-    white-space: nowrap !important;
-  }
-  .custom-table-wrapper th, .custom-table-wrapper td {
-    padding: 10px 14px !important;
-    vertical-align: middle !important;
-    font-size: 13px !important;
-  }
-  .custom-table-wrapper th {
-    background-color: #f8f9fc !important;
-    color: #4e73df !important;
-    font-weight: 700 !important;
-  }
+    .chg-container {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: #ffffff;
+        border-radius: 6px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-top: 10px;
+    }
+    .chg-view-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #eef2f5;
+        padding-bottom: 12px;
+        margin-bottom: 20px;
+    }
+    .chg-view-title {
+        font-size: 18px;
+        color: #2c3e50;
+        margin: 0;
+        font-weight: 600;
+    }
+    .chg-blue-btn {
+        background-color: #1ea7e1 !important;
+        color: #ffffff !important;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: bold;
+        border-radius: 4px;
+        text-decoration: none !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: none;
+        cursor: pointer;
+    }
+    .chg-blue-btn:hover {
+        background-color: #1586b7 !important;
+        color: #ffffff !important;
+    }
+    .chg-data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        border: 1px solid #dddddd;
+    }
+    .chg-data-table th {
+        background-color: #f2f5f8;
+        color: #1ea7e1 !important; 
+        font-weight: bold;
+        padding: 12px 10px;
+        border: 1px solid #dddddd;
+        font-size: 13px;
+    }
+    .chg-data-table td {
+        padding: 10px;
+        border: 1px solid #dddddd;
+        font-size: 13px;
+        color: #444444;
+    }
+    .custom-table-wrapper {
+        width: 100% !important;
+        overflow-x: auto !important;
+        margin-top: 15px;
+    }
+    /* Style form field label names to match standard system blue */
+    .manda, .chg-form-label {
+        font-weight: bold;
+        font-size: 13px;
+        color: #1ea7e1 !important;
+        display: block;
+        margin-bottom: 5px;
+    }
+    /* Centering Layer for Form View Content */
+    .chg-form-center-wrapper {
+        max-width: 550px;
+        margin: 20px auto;
+        padding: 25px;
+        background: #fbfcfd;
+        border: 1px solid #eef2f5;
+        border-radius: 8px;
+    }
+    /* Custom Modern Inputs and Select Dropdowns Styling Layer */
+    .chg-form-center-wrapper .form-control,
+    .chg-form-center-wrapper input[type="text"],
+    .chg-form-center-wrapper input[type="date"],
+    .chg-form-center-wrapper select {
+        width: 100% !important;
+        height: 38px !important;
+        padding: 6px 12px !important;
+        font-size: 13px !important;
+        color: #333333 !important;
+        background-color: #ffffff !important;
+        border: 1px solid #cccccc !important;
+        border-radius: 4px !important;
+        box-shadow: inset 0 1px 1px rgba(0,0,0,0.075) !important;
+        transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s !important;
+        box-sizing: border-box !important;
+    }
+    .chg-form-center-wrapper .form-control:focus,
+    .chg-form-center-wrapper input:focus,
+    .chg-form-center-wrapper select:focus {
+        border-color: #1ea7e1 !important;
+        outline: 0 !important;
+        box-shadow: inset 0 1px 1px rgba(0,0,0,0.075), 0 0 6px rgba(30,167,225,0.4) !important;
+    }
 </style>
 
-<form method='POST' action='' class='rounded' name='member' style='min-width:100%' enctype='multipart/form-data'>
+<div class="chg-container">
+    <div class="chg-view-header">
+        <h2 class="chg-view-title">
+            <?= htmlspecialchars(ucwords($title ?? '')); ?>
+            <span style="font-size: 13px; color: #7f8c8d; font-weight: normal; margin-left: 5px;">
+                <?php echo ($part=='1') ? '» New Entry' : (($part=='2') ? '» Update Entry' : '» Existing Records Matrix'); ?>
+            </span>
+        </h2>
+        <?php if ($part != '1' && $part != '2') { ?>
+            <div>
+                <a href="index.php?page=<?=$page?>&part=1" class="chg-blue-btn">
+                    <i class="fa fa-plus"></i> Create New
+                </a>
+            </div>
+        <?php } ?>
+    </div>
 
-<?php 
-$role = isset($_SESSION['userrole']) ? $_SESSION['userrole'] : 0;
+    <form method='POST' action='' name='member' enctype='multipart/form-data' id="memberForm">
+    <?php 
+    $role = isset($_SESSION['userrole']) ? $_SESSION['userrole'] : 0;
 
-if($part=='1') { ?>
+    if($part=='1') { ?>
+        <!-- ==================== CREATE LAYOUT (CENTERED) ==================== -->
+        <div class="chg-form-center-wrapper">
+            <div style="margin-bottom: 15px;">
+                <label class="manda">Group id : <span style="color:#e74c3c;">*</span></label>
+                <select class="form-control" id="group_id" name="group_id" required='required'>
+                    <?php if(isset($_POST['group_id']) && $_POST['group_id'] && $conn) { 
+                      $qresult = mysqli_query($conn,"SELECT logid,name FROM provider_group where logid='".$_POST['group_id']."'");
+                      while($qresult && $drow = mysqli_fetch_assoc($qresult)) { ?>
+                        <option value="<?php echo $drow['logid']?>"><?php echo $drow['name']?></option>
+                    <?php } } ?>
+                    <option value="">Select Group id</option>
+                    <?php
+                    $group_id_query = ($role==4) ? " where logid='".(isset($_SESSION['groupid']) ? $_SESSION['groupid'] : 0)."' " : " ";
+                    if($conn) {
+                        $qresult = mysqli_query($conn,"SELECT logid,name FROM provider_group $group_id_query ORDER BY name");
+                        while($qresult && $drow = mysqli_fetch_assoc($qresult)) { ?>
+                            <option value="<?php echo $drow['logid']?>"><?php echo $drow['name']?></option>
+                    <?php } } ?>
+                </select>
+            </div>
 
-<div class='col-md-8 offset-2'>
-                <div class='x_panel'>
-                  <div class='x_title'>
-                    <h2><?=ucwords($title);?><small>new entry</small></h2>
-					<ul class='nav navbar-right panel_toolbox'>
-                      <li><a class='link'><i class='fa fa-chevron-up'></i></a>
-                      </li>
-                     </ul>
-					<div class='clearfix'></div>
-                  </div>
-					<div class='x_content  center-block'>
-					
- 
-<div class="item form-group"><label for="group_id" class="col-sm-3 manda">Group id : </label>
-<div class="col-sm-8"> 
-<select class="form-control manda" id="group_id" name="group_id"  required='required'>
-<?php if(isset($_POST['group_id']) && $_POST['group_id'] && $conn) { 
-  $qresult = mysqli_query($conn,"SELECT logid,name FROM provider_group where logid='".$_POST['group_id']."'");
-  while($qresult && $drow = mysqli_fetch_assoc($qresult)) { ?>
-    <option value="<?php echo $drow['logid']?>"><?php echo $drow['name']?></option>
-<?php } } ?>
+            <div style="margin-bottom: 15px;">
+                <label class="manda">Name : <span style="color:#e74c3c;">*</span></label>
+                <input type="text" required='required' class="form-control" name="name" id="name" placeholder="Name" value="<?php echo htmlspecialchars($_POST['name'] ?? '')?>" autocomplete="off">
+            </div>
 
-<option value="">Select Group id</option>
-<?php
-if($role==4) {
-	$group_id_query =" where logid='".(isset($_SESSION['groupid']) ? $_SESSION['groupid'] : 0)."' ";
-} else {
-	$group_id_query =" ";
-}
-if($conn) {
-    $qresult = mysqli_query($conn,"SELECT logid,name FROM provider_group $group_id_query ORDER BY name");
-    while($qresult && $drow = mysqli_fetch_assoc($qresult)) { ?>
-        <option value="<?php echo $drow['logid']?>"><?php echo $drow['name']?></option>
-<?php } } ?>
-</select>
-</div>
-</div>
+            <div style="margin-bottom: 15px;">
+                <label class="manda">Phone no : <span style="color:#e74c3c;">*</span></label>
+                <input type="text" required='required' class="form-control" name="phone_no" id="phone_no" placeholder="Phone no" value="<?php echo htmlspecialchars($_POST['phone_no'] ?? '')?>" autocomplete="off">
+            </div>
 
- <div class="item form-group">
-<label for="name" class="col-sm-3 manda">Name : </label>
-<div class="col-sm-8">
-<input type="text"  required='required' class="form-control form-control-sm manda" name="name" id="name" placeholder="Name" value="<?php echo isset($_POST['name']) ? $_POST['name'] : ''?>" autocomplete="off">
-</div>
-</div>
+            <div style="margin-bottom: 15px;">
+                <label class="manda">Nat id : <span style="color:#e74c3c;">*</span></label>
+                <input type="text" required='required' class="form-control" name="nat_id" id="nat_id" placeholder="Nat id" value="<?php echo htmlspecialchars($_POST['nat_id'] ?? '')?>" autocomplete="off">
+            </div>
 
- <div class="item form-group">
-<label for="phone_no" class="col-sm-3 manda">Phone no : </label>
-<div class="col-sm-8">
-<input type="text"  required='required' class="form-control form-control-sm manda" name="phone_no" id="phone_no" placeholder="Phone no" value="<?php echo isset($_POST['phone_no']) ? $_POST['phone_no'] : ''?>" autocomplete="off">
-</div>
-</div>
+            <div style="margin-bottom: 15px;">
+                <label class="manda">Dob : <span style="color:#e74c3c;">*</span></label>
+                <input type="date" class="form-control" value="<?php echo date('Y-m-d')?>" name="dob" id="dob">
+            </div>
 
- <div class="item form-group">
-<label for="nat_id" class="col-sm-3 manda">Nat id : </label>
-<div class="col-sm-8">
-<input type="text"  required='required' class="form-control form-control-sm manda" name="nat_id" id="nat_id" placeholder="Nat id" value="<?php echo isset($_POST['nat_id']) ? $_POST['nat_id'] : ''?>" autocomplete="off">
-</div>
-</div>
+            <div style="margin-bottom: 15px;">
+                <label class="manda">Gender : <span style="color:#e74c3c;">*</span></label>
+                <select class="form-control" id="gender" name="gender" required='required'>
+                    <?php if(isset($_POST['gender']) && $_POST['gender']) { ?>
+                        <option value="<?php echo htmlspecialchars($_POST['gender'])?>"><?php echo htmlspecialchars($_POST['gender'])?></option>	
+                    <?php } ?>
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
 
-<div class="item form-group"><label for="dob" class="col-sm-3 manda">Dob : </label>
-<div class="col-sm-8">
-<input type="date" class="form-control form-control-sm" value="<?php echo date('Y-m-d')?>" name="dob" id="dob">
-</div>
-</div>
+            <div style="margin-bottom: 15px;">
+                <label class="manda">Medical condition : <span style="color:#e74c3c;">*</span></label>
+                <select class="form-control" id="medical_condition" name="medical_condition" required='required'>
+                    <?php if(isset($_POST['medical_condition']) && $_POST['medical_condition'] && $conn) { 
+                      $qresult = mysqli_query($conn,"SELECT logid,description FROM conditions where logid='".$_POST['medical_condition']."'");
+                      while($qresult && $drow = mysqli_fetch_assoc($qresult)) { ?>
+                        <option value="<?php echo $drow['logid']?>"><?php echo $drow['description']?></option>
+                    <?php } } ?>
+                    <option value="">Select Medical condition</option>
+                    <?php if($conn) {
+                        $qresult = mysqli_query($conn,"SELECT logid,description FROM conditions ORDER BY description");
+                        while($qresult && $drow = mysqli_fetch_assoc($qresult)) { ?>
+                            <option value="<?php echo $drow['logid']?>"><?php echo $drow['description']?></option>
+                    <?php } } ?>
+                </select>
+            </div>
 
-<div class="item form-group"><label for="gender" class="col-sm-3 manda">Gender : </label>
-<div class="col-sm-8"> 
-<select class="form-control manda" id="gender" name="gender"  required='required'>
-<?php if(isset($_POST['gender']) && $_POST['gender']) { ?>
-    <option value="<?php echo $_POST['gender']?>"><?php echo $_POST['gender']?></option>	
-<?php } ?>
-<option value="">Select Gender</option>
-<option value="Male">Male</option>
-<option value="Female">Female</option>
-<option value="Other">Other</option>
-</select>
-</div>
-</div>
+            <div style="margin-bottom: 15px;">
+                <label class="chg-form-label">Caregiver name :</label>
+                <input type="text" class="form-control" name="caregiver_name" id="caregiver_name" placeholder="Caregiver name" value="<?php echo htmlspecialchars($_POST['caregiver_name'] ?? '')?>" autocomplete="off">
+            </div>
 
-<div class="item form-group"><label for="medical_condition" class="col-sm-3 manda">Medical condition : </label>
-<div class="col-sm-8"> 
-<select class="form-control manda" id="medical_condition" name="medical_condition"  required='required'>
-<?php if(isset($_POST['medical_condition']) && $_POST['medical_condition'] && $conn) { 
-  $qresult = mysqli_query($conn,"SELECT logid,description FROM conditions where logid='".$_POST['medical_condition']."'");
-  while($qresult && $drow = mysqli_fetch_assoc($qresult)) { ?>
-    <option value="<?php echo $drow['logid']?>"><?php echo $drow['description']?></option>
-<?php } } ?>
+            <div style="margin-bottom: 15px;">
+                <label class="chg-form-label">Caregiver phone :</label>
+                <input type="text" class="form-control" name="caregiver_phone" id="caregiver_phone" placeholder="Caregiver phone" value="<?php echo htmlspecialchars($_POST['caregiver_phone'] ?? '')?>" autocomplete="off">
+            </div>
 
-<option value="">Select Medical condition</option>
-<?php
-if($conn) {
-    $qresult = mysqli_query($conn,"SELECT logid,description FROM conditions ORDER BY description");
-    while($qresult && $drow = mysqli_fetch_assoc($qresult)) { ?>
-        <option value="<?php echo $drow['logid']?>"><?php echo $drow['description']?></option>
-<?php } } ?>
-</select>
-</div>
-</div>
+            <div style="margin-bottom: 15px;">
+                <label class="chg-form-label">Registration date :</label>
+                <input type="date" class="form-control" value="<?php echo date('Y-m-d')?>" name="registration_date" id="registration_date">
+            </div>
 
- <div class="item form-group">
-<label for="caregiver_name" class="col-sm-3 ">Caregiver name : </label>
-<div class="col-sm-8">
-<input type="text"  class="form-control form-control-sm " name="caregiver_name" id="caregiver_name" placeholder="Caregiver name" value="<?php echo isset($_POST['caregiver_name']) ? $_POST['caregiver_name'] : ''?>" autocomplete="off">
-</div>
-</div>
+            <div style="margin-bottom: 15px;">
+                <label class="manda">Leader : <span style="color:#e74c3c;">*</span></label>
+                <select class="form-control" id="isleader" name="isleader" required='required'>
+                    <?php if(isset($_POST['isleader']) && $_POST['isleader']) { ?>
+                        <option value="<?php echo htmlspecialchars($_POST['isleader'])?>"><?php echo ($_POST['isleader']==1) ? 'Yes' : 'No'; ?></option>	
+                    <?php } ?>
+                    <option value="">Select</option>
+                    <option value="1">Yes</option>
+                    <option value="0">No</option>
+                </select>
+            </div>
 
- <div class="item form-group">
-<label for="caregiver_phone" class="col-sm-3 ">Caregiver phone : </label>
-<div class="col-sm-8">
-<input type="text"  class="form-control form-control-sm " name="caregiver_phone" id="caregiver_phone" placeholder="Caregiver phone" value="<?php echo isset($_POST['caregiver_phone']) ? $_POST['caregiver_phone'] : ''?>" autocomplete="off">
-</div>
-</div>
+            <div style="margin-bottom: 15px;">
+                <label class="manda">Active : <span style="color:#e74c3c;">*</span></label>
+                <select class="form-control" id="active" name="active" required='required'>
+                    <?php if(isset($_POST['active']) && $_POST['active']) { ?>
+                        <option value="<?php echo htmlspecialchars($_POST['active'])?>"><?php echo htmlspecialchars($_POST['active'])?></option>	
+                    <?php } ?>
+                    <option value="">Select Active</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
 
-<div class="item form-group"><label for="registration_date" class="col-sm-3 ">Registration date : </label>
-<div class="col-sm-8">
-<input type="date" class="form-control form-control-sm" value="<?php echo date('Y-m-d')?>" name="registration_date" id="registration_date">
-</div>
-</div>
+            <div style="margin-bottom: 15px;">
+                <label class="chg-form-label">Activation dt :</label>
+                <input type="date" class="form-control" value="<?php echo date('Y-m-d')?>" name="activation_dt" id="activation_dt">
+            </div>
 
-<div class="item form-group"><label for="isleader" class="col-sm-3 manda">Leader : </label>
-<div class="col-sm-8"> 
-<select class="form-control manda" id="isleader" name="isleader"  required='required'>
-<?php if(isset($_POST['isleader']) && $_POST['isleader']) { ?>
-    <option value="<?php echo $_POST['isleader']?>"><?php echo ($_POST['isleader']==1) ? 'Yes' : 'No'; ?></option>	
-<?php } ?>
-<option value="">Select</option>
-<option value="1">Yes</option>
-<option value="0">No</option>
-</select>
-</div>
-</div>
+            <div style="margin-top: 25px; padding-top: 15px; border-top:1px solid #eef2f5; display:flex; gap:10px; justify-content: flex-start;">
+                <button type="submit" name="member_save" class="chg-blue-btn"><i class="fa fa-save"></i> Save</button>
+                <a href="index.php?page=<?=$page?>" class="btn btn-secondary btn-sm" style="padding:8px 16px; font-size:13px; line-height: 1.42857143;">Back</a>
+            </div>
+        </div>
 
-<div class="item form-group"><label for="active" class="col-sm-3 manda">Active : </label>
-<div class="col-sm-8"> 
-<select class="form-control manda" id="active" name="active"  required='required'>
-<?php if(isset($_POST['active']) && $_POST['active']) { ?>
-    <option value="<?php echo $_POST['active']?>"><?php echo $_POST['active']?></option>	
-<?php } ?>
-<option value="">Select Active</option>
-<option value="Yes">Yes</option>
-<option value="No">No</option>
-</select>
-</div>
-</div>
+    <?php } elseif($part=='2') { ?>
+        <!-- ==================== EDIT LAYOUT (CENTERED) ==================== -->
+        <div class="chg-form-center-wrapper">
+            <?php 
+            $result = $conn ? mysqli_query($conn,"SELECT * FROM member WHERE logid='".mysqli_real_escape_string($conn, $rec)."'") : null;
+            while($result && $row = mysqli_fetch_assoc($result)) { ?> 
+                <div style="margin-bottom: 15px;">
+                    <label class="manda">Group id : <span style="color:#e74c3c;">*</span></label>
+                    <select class="form-control" id="group_id" name="group_id" required='required'>
+                        <?php $qresult = mysqli_query($conn,"SELECT logid,name FROM provider_group WHERE logid='".$row['group_id']."'");
+                        while($qresult && $drow = mysqli_fetch_assoc($qresult)) { ?>
+                            <option value="<?php echo $drow['logid']?>"><?php echo $drow['name']?></option>
+                        <?php } ?>
+                        <option value="">Select Group id</option>
+                        <?php $qresult = mysqli_query($conn,"SELECT logid,name FROM provider_group ORDER BY name");
+                        while($qresult && $drow = mysqli_fetch_assoc($qresult)) { ?>
+                            <option value="<?php echo $drow['logid']?>"><?php echo $drow['name']?></option>
+                        <?php } ?>
+                    </select>
+                </div>
 
-<div class="item form-group"><label for="activation_dt" class="col-sm-3 ">Activation dt : </label>
-<div class="col-sm-8">
-<input type="date" class="form-control form-control-sm" value="<?php echo date('Y-m-d')?>" name="activation_dt" id="activation_dt">
-</div>
-</div>
+                <div style="margin-bottom: 15px;">
+                    <label class="manda">Name : <span style="color:#e74c3c;">*</span></label>
+                    <input type="text" required='required' class="form-control" name="name" id="name" placeholder="Name" value="<?php echo htmlspecialchars($row['name'])?>" autocomplete="off">
+                </div>
 
-<br />
-<div class="ln_solid"></div>
-<div class="form-group row text-center">
-<div class="col-md">
- <button data-placement="bottom" title="Save data" type="submit" name="member_save" style="padding: 0.4em;" class="btn btn-success btn-sm"><span>Save</span>  <i class="fa fa-save"></i></button>
- &nbsp; &nbsp;
- <a href="index.php?page=<?= $page ?>&part=1" data-placement="bottom" title="Add New Record">
- <button type="button" name="new" style="padding: 0.4em;" class="btn btn-success btn-sm"><span>New</span>  <i class="fa fa-file custom"></i></button></a>
- &nbsp; &nbsp;
- <a href="index.php?page=<?= $page ?>" data-placement="bottom" title="Go to records">
- <button type="button" name="exit" style="padding: 0.4em;" class="btn btn-success btn-sm"><span>View</span>  <i class="fa fa-search custom"></i></button></a>
- &nbsp; &nbsp;
- <a href="index.php?page=<?= $page ?>" data-placement="bottom" title="Go to dashboard"><button style="padding: 0.4em;" type="button" name="exit" class="btn btn-success btn-sm btn-info"><i class="fa fa-reply" style="float: none;"></i> &nbsp;<span>Back</span> </button></a>
-</div>
-</div>
+                <div style="margin-bottom: 15px;">
+                    <label class="manda">Phone no : <span style="color:#e74c3c;">*</span></label>
+                    <input type="text" required='required' class="form-control" name="phone_no" id="phone_no" placeholder="Phone no" value="<?php echo htmlspecialchars($row['phone_no'])?>" autocomplete="off">
+                </div>
 
-</div>
-</div>
-</div>
+                <div style="margin-bottom: 15px;">
+                    <label class="manda">Nat id : <span style="color:#e74c3c;">*</span></label>
+                    <input type="text" required='required' class="form-control" name="nat_id" id="nat_id" placeholder="Nat id" value="<?php echo htmlspecialchars($row['nat_id'])?>" autocomplete="off">
+                </div>
 
-<?php } elseif($part=='2') { ?>
+                <div style="margin-bottom: 15px;">
+                    <label class="manda">Dob : <span style="color:#e74c3c;">*</span></label>
+                    <input type="date" class="form-control" value="<?php echo htmlspecialchars($row['dob'])?>" name="dob" id="dob">
+                </div>
+                 
+                <div style="margin-bottom: 15px;">
+                    <label class="manda">Gender : <span style="color:#e74c3c;">*</span></label>
+                    <select class="form-control" id="gender" name="gender" required='required'>
+                        <option value="<?php echo htmlspecialchars($row['gender'])?>"><?php echo htmlspecialchars($row['gender'])?></option>
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
 
-<div class='col-md-8 offset-2'>
-                <div class='x_panel'>
-                  <div class='x_title'>
-                    <h2><?=ucwords($title);?><small>update entry</small></h2>
-					<ul class='nav navbar-right panel_toolbox'>
-                      <li><a class='link'><i class='fa fa-chevron-up'></i></a>
-                      </li>
-                     </ul>
-					<div class='clearfix'></div>
-                  </div>
-					<div class='x_content center-block'>
+                <div style="margin-bottom: 15px;">
+                    <label class="manda">Medical condition : <span style="color:#e74c3c;">*</span></label>
+                    <select class="form-control" id="medical_condition" name="medical_condition" required='required'>
+                        <?php $qresult = mysqli_query($conn,"SELECT logid,description FROM conditions WHERE logid='".$row['medical_condition']."'");
+                        while($qresult && $drow = mysqli_fetch_assoc($qresult)) { ?>
+                            <option value="<?php echo $drow['logid']?>"><?php echo $drow['description']?></option>
+                        <?php } ?>
+                        <option value="">Select Medical condition</option>
+                        <?php $qresult = mysqli_query($conn,"SELECT logid,description FROM conditions ORDER BY description");
+                        while($qresult && $drow = mysqli_fetch_assoc($qresult)) { ?>
+                            <option value="<?php echo $drow['logid']?>"><?php echo $drow['description']?></option>
+                        <?php } ?>
+                    </select>
+                </div>
 
-<?php 
-$result = $conn ? mysqli_query($conn,"SELECT * FROM member WHERE logid='$rec'") : null;
-while($result && $row = mysqli_fetch_assoc($result)) { ?> 
-<div class="item form-group"><label for="group_id" class="col-sm-3 manda">Group id : </label>
-<div class="col-sm-8">
-<select class="form-control manda" id="group_id" name="group_id"  required='required'>
-<?php $qresult = mysqli_query($conn,"SELECT logid,name FROM provider_group WHERE logid='".$row['group_id']."'");
-while($qresult && $drow = mysqli_fetch_assoc($qresult)) { ?>
-    <option value="<?php echo $drow['logid']?>"><?php echo $drow['name']?></option>
-<?php } ?>
-<option value="">Select Group id</option>
-<?php
-$qresult = mysqli_query($conn,"SELECT logid,name FROM provider_group ORDER BY name");
-while($qresult && $drow = mysqli_fetch_assoc($qresult)) { ?>
-    <option value="<?php echo $drow['logid']?>"><?php echo $drow['name']?></option>
-<?php } ?>
-</select>
-</div>
-</div>
+                <div style="margin-bottom: 15px;">
+                    <label class="chg-form-label">Caregiver name :</label>
+                    <input type="text" class="form-control" name="caregiver_name" id="caregiver_name" placeholder="Caregiver name" value="<?php echo htmlspecialchars($row['caregiver_name'])?>" autocomplete="off">
+                </div>
 
-<div class="item form-group"><label for="name" class="col-sm-3 manda">Name : </label>
-<div class="col-sm-8"> 
-<input type="text"  required='required' class="form-control form-control-sm manda" name="name" id="name" placeholder="Name" value="<?php echo $row['name']?>" autocomplete="off">
-</div>
-</div>
+                <div style="margin-bottom: 15px;">
+                    <label class="chg-form-label">Caregiver phone :</label>
+                    <input type="text" class="form-control" name="caregiver_phone" id="caregiver_phone" placeholder="Caregiver phone" value="<?php echo htmlspecialchars($row['caregiver_phone'])?>" autocomplete="off">
+                </div>
 
-<div class="item form-group"><label for="phone_no" class="col-sm-3 manda">Phone no : </label>
-<div class="col-sm-8"> 
-<input type="text"  required='required' class="form-control form-control-sm manda" name="phone_no" id="phone_no" placeholder="Phone no" value="<?php echo $row['phone_no']?>" autocomplete="off">
-</div>
-</div>
+                <div style="margin-bottom: 15px;">
+                    <label class="chg-form-label">Registration date :</label>
+                    <input type="date" class="form-control" value="<?php echo htmlspecialchars($row['registration_date'])?>" name="registration_date" id="registration_date">
+                </div>
+                 
+                <div style="margin-bottom: 15px;">
+                    <label class="manda">Leader : <span style="color:#e74c3c;">*</span></label>
+                    <select class="form-control" id="isleader" name="isleader" required='required'>
+                        <option value="<?php echo htmlspecialchars($row['isleader'])?>"><?php echo ($row['isleader']==1) ? 'Yes' : 'No'; ?></option>	
+                        <option value="">Select</option>
+                        <option value="1">Yes</option>
+                        <option value="0">No</option>
+                    </select>
+                </div>
 
-<div class="item form-group"><label for="nat_id" class="col-sm-3 manda">Nat id : </label>
-<div class="col-sm-8"> 
-<input type="text"  required='required' class="form-control form-control-sm manda" name="nat_id" id="nat_id" placeholder="Nat id" value="<?php echo $row['nat_id']?>" autocomplete="off">
-</div>
-</div>
+                <div style="margin-bottom: 15px;">
+                    <label class="manda">Active : <span style="color:#e74c3c;">*</span></label>
+                    <select class="form-control" id="active" name="active" required='required'>
+                        <option value="<?php echo htmlspecialchars($row['active'])?>"><?php echo htmlspecialchars($row['active'])?></option>
+                        <option value="">Select Active</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
 
-<div class="item form-group"><label for="dob" class="col-sm-3 manda">Dob : </label>
-<div class="col-sm-8">
-<input type="date" class="form-control form-control-sm" value="<?php echo ($row['dob'])?>" name="dob" id="dob">
-</div>
-</div>
- 
-<div class="item form-group"><label for="gender" class="col-sm-3 manda">Gender : </label>
-<div class="col-sm-8">
-<select class="form-control manda" id="gender" name="gender"  required='required'>
-<option value="<?php echo $row['gender']?>"><?php echo $row['gender']?></option>
-<option value="">Select Gender</option>
-<option value="Male">Male</option>
-<option value="Female">Female</option>
-<option value="Other">Other</option>
-</select>
-</div>
-</div>
+                <div style="margin-bottom: 15px;">
+                    <label class="chg-form-label">Activation dt :</label>
+                    <input type="date" class="form-control" value="<?php echo htmlspecialchars($row['activation_dt']) ?>" name="activation_dt" id="activation_dt">
+                </div>
+                 
+                <div style="margin-bottom: 15px;">
+                    <label class="chg-form-label">Deactivation dt :</label>
+                    <input type="date" class="form-control" value="<?php if($row['deactivation_dt']!='0000-00-00 00:00:00' && !empty($row['deactivation_dt'])) { echo date('Y-m-d', strtotime($row['deactivation_dt'])); }?>" name="deactivation_dt" id="deactivation_dt">
+                </div>
 
-<div class="item form-group"><label for="medical_condition" class="col-sm-3 manda">Medical condition : </label>
-<div class="col-sm-8">
-<select class="form-control manda" id="medical_condition" name="medical_condition"  required='required'>
-<?php $qresult = mysqli_query($conn,"SELECT logid,description FROM conditions WHERE logid='".$row['medical_condition']."'");
-while($qresult && $drow = mysqli_fetch_assoc($qresult)) { ?>
-    <option value="<?php echo $drow['logid']?>"><?php echo $drow['description']?></option>
-<?php } ?>
-<option value="">Select Medical condition</option>
-<?php
-$qresult = mysqli_query($conn,"SELECT logid,description FROM conditions ORDER BY description");
-while($qresult && $drow = mysqli_fetch_assoc($qresult)) { ?>
-    <option value="<?php echo $drow['logid']?>"><?php echo $drow['description']?></option>
-<?php } ?>
-</select>
-</div>
-</div>
+                <div style="margin-top: 25px; padding-top: 15px; border-top:1px solid #eef2f5; display:flex; gap:10px; justify-content: flex-start;">
+                    <button type="submit" name="member_update" class="chg-blue-btn"><i class="fa fa-save"></i> Update</button>
+                    <a href="index.php?page=<?=$page?>" class="btn btn-secondary btn-sm" style="padding:8px 16px; font-size:13px; line-height: 1.42857143;">Cancel</a>
+                </div>
+                <input name="logid" type="hidden" value="<?=$row['logid']?>" />
+            <?php } ?> 
+        </div>
 
-<div class="item form-group"><label for="caregiver_name" class="col-sm-3 ">Caregiver name : </label>
-<div class="col-sm-8"> 
-<input type="text"  class="form-control form-control-sm " name="caregiver_name" id="caregiver_name" placeholder="Caregiver name" value="<?php echo $row['caregiver_name']?>" autocomplete="off">
-</div>
-</div>
+    <?php } else { ?>
+        <!-- ==================== DATA GRID TABLE LAYOUT ==================== -->
+        <div class="custom-table-wrapper">
+            <table id="datatable" class="chg-data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px; text-align: center;">MemberNo.</th>
+                        <th>Member Ref</th>
+                        <th>Group Id</th>
+                        <th>Name</th>
+                        <th>Phone No</th>
+                        <th>Gender</th>
+                        <th>Medical Condition</th>
+                        <th>Caregiver Name</th>
+                        <th>Caregiver Phone</th>
+                        <th>Registration Date</th>
+                        <th>Active</th>
+                        <th style="text-align: center;">Rx</th>
+                        <th style="width: 60px; text-align: center;">Edit</th> 
+                        <th style="width: 60px; text-align: center;">Del</th> 
+                    </tr>
+                </thead>
+                <tbody>
+                <?php $mycount=0;
+                $where = ($role==4) ? " and group_id='".(isset($_SESSION['groupid']) ? $_SESSION['groupid'] : 0)."' " : " ";
 
-<div class="item form-group"><label for="caregiver_phone" class="col-sm-3 ">Caregiver phone : </label>
-<div class="col-sm-8"> 
-<input type="text"  class="form-control form-control-sm " name="caregiver_phone" id="caregiver_phone" placeholder="Caregiver phone" value="<?php echo $row['caregiver_phone']?>" autocomplete="off">
-</div>
-</div>
+                if(isset($_POST['tbn_search']) && $conn) {
+                    $search=$conn->real_escape_string($_POST['search']);
+                    $result = @mysqli_query($conn,"SELECT * FROM member where group_id>0 $where and (group_id like '%$search%' OR name like '%$search%' OR phone_no like '%$search%' OR nat_id like '%$search%' OR dob like '%$search%' OR gender like '%$search%' OR medical_condition like '%$search%' OR caregiver_name like '%$search%' OR caregiver_phone like '%$search%' OR registration_date like '%$search%' OR active like '%$search%' OR activation_dt like '%$search%' OR deactivation_dt like '%$search%' OR created_by like '%$search%' OR created_on like '%$search%')");
+                } else {
+                    $result = $conn ? @mysqli_query($conn,"SELECT * FROM member $where ORDER BY logid DESC") : null;
+                }
 
-<div class="item form-group"><label for="registration_date" class="col-sm-3 ">Registration date : </label>
-<div class="col-sm-8">
-<input type="date" class="form-control form-control-sm" value="<?php echo ($row['registration_date'])?>" name="registration_date" id="registration_date">
+                if($result && mysqli_num_rows($result) > 0) {
+                    while($row = @mysqli_fetch_assoc($result)) { 
+                        $mycount=$mycount+1; ?> 				  
+                        <tr>
+                            <td style="text-align: center;"><?=$row['logid']?></td>
+                            <td><a href="index.php?page=member_profile&id=<?=$row['logid']?>" style="color: #1ea7e1; font-weight: bold;"><?=htmlspecialchars($row['mnumber'])?></a></td>
+                            <td><?php
+                            $qresult = $conn ? mysqli_query($conn,"SELECT name FROM provider_group WHERE logid='".$row['group_id']."'") : null;
+                            while($qresult && $drow = mysqli_fetch_assoc($qresult)) {  
+                                echo htmlspecialchars($drow['name']);  
+                            } ?></td>
+                            <td><strong><?php echo htmlspecialchars($row['name'])?></strong></td>
+                            <td><?php echo htmlspecialchars($row['phone_no'])?></td>
+                            <td><?php echo htmlspecialchars($row['gender'])?></td>
+                            <td><?php
+                            $qresult = $conn ? mysqli_query($conn,"SELECT description FROM conditions WHERE logid='".$row['medical_condition']."'") : null;
+                            while($qresult && $drow = mysqli_fetch_assoc($qresult)) {  
+                                echo htmlspecialchars($drow['description']);  
+                            } ?></td>
+                            <td><?php echo htmlspecialchars($row['caregiver_name'])?></td>
+                            <td><?php echo htmlspecialchars($row['caregiver_phone'])?></td>
+                            <td><?php echo htmlspecialchars($row['registration_date'])?></td>
+                            <td><?php echo htmlspecialchars($row['active'])?></td>
+                            <td align="center"><a href="index.php?page=prescription&part=1&m=<?=$row['logid']?>&g=<?=$row['group_id']?>"><i class="fa fa-user-md text-info"></i></a></td>
+                            <td align="center">
+                                <a href="index.php?page=<?= $page ?>&part=2&rec=<?=$row['logid']?>" style="color: #1ea7e1;"><i class="fa fa-pencil"></i> Edit</a>
+                            </td>
+                            <td align="center">
+                                <input name="del[]" type="checkbox" value="<?=$row['logid']?>" style="cursor:pointer;" />
+                            </td>
+                        </tr>
+                    <?php } 
+                } else { ?>
+                    <tr>
+                        <td colspan="14" style="text-align: center; color: #7f8c8d; padding: 25px; font-style: italic;">
+                            No member records found. Click <a href="index.php?page=<?= $page ?>&part=1" style="color:#1ea7e1;"><u>Create New</u></a> to get started.
+                        </td>
+                    </tr>
+                <?php } ?>
+                </tbody>
+                <?php if ($mycount > 0) { ?>
+                <tfoot>
+                    <tr style="background-color: #f5f5f5; font-weight: bold;">
+                        <td colspan="13" style="text-align: right; vertical-align: middle; padding-right:15px;">With Selected Items:</td>
+                        <td style="text-align: center;">
+                            <button name="member_delete" type="submit" class="btn btn-danger btn-sm" onClick="return confirm('Please confirm deletion of checked records');">
+                                <i class="fa fa-trash"></i> Del
+                            </button>
+                        </td>
+                    </tr>
+                </tfoot>
+                <?php } ?>
+            </table>
+        </div> 
+        <input type="hidden" name="txtcount" id="txtcount" value="<?php echo $mycount;?>"> 
+    <?php } ?>
+    </form>
 </div>
-</div>
- 
- <div class="item form-group"><label for="isleader" class="col-sm-3 manda">Leader : </label>
-<div class="col-sm-8"> 
-<select class="form-control manda" id="isleader" name="isleader"  required='required'>
-<option value="<?php echo $row['isleader']?>"><?php echo ($row['isleader']==1) ? 'Yes' : 'No'; ?></option>	
-<option value="">Select</option>
-<option value="1">Yes</option>
-<option value="0">No</option>
-</select>
-</div>
-</div>
-
-<div class="item form-group"><label for="active" class="col-sm-3 manda">Active : </label>
-<div class="col-sm-8">
-<select class="form-control manda" id="active" name="active"  required='required'>
-<option value="<?php echo $row['active']?>"><?php echo $row['active']?></option>
-<option value="">Select Active</option>
-<option value="Yes">Yes</option>
-<option value="No">No</option>
-</select>
-</div>
-</div>
-
-<div class="item form-group"><label for="activation_dt" class="col-sm-3 ">Activation dt : </label>
-<div class="col-sm-8">
-<input type="date" class="form-control form-control-sm" value="<?php echo $row['activation_dt'] ?>" name="activation_dt" id="activation_dt">
-</div>
-</div>
- 
-<div class="item form-group"><label for="deactivation_dt" class="col-sm-3 ">Deactivation dt : </label>
-<div class="col-sm-8">
-<input type="date" class="form-control form-control-sm" value="<?php if($row['deactivation_dt']!='0000-00-00 00:00:00' && !empty($row['deactivation_dt'])) { echo date('Y-m-d', strtotime($row['deactivation_dt'])); }?>" name="deactivation_dt" id="deactivation_dt">
-</div>
-</div>
- 
-<br />
-<div class="ln_solid"></div>
-<div class="form-group row text-center">
-<div class="col-md">
- <button data-placement="bottom" title="Update data" type="submit" name="member_update" style="padding: 0.4em;" class="btn btn-success btn-sm"><span>Update</span>  <i class="fa fa-save"></i></button>
- &nbsp; &nbsp; 
- <a href="index.php?page=<?= $page ?>&part=1" data-placement="bottom" title="Add New Record">
- <button type="button" name="new" style="padding: 0.4em;" class="btn btn-success btn-sm"><span>New</span>  <i class="fa fa-file custom"></i></button></a>
- &nbsp; &nbsp; 
- <a href="index.php?page=<?= $page ?>" data-placement="bottom" title="Go to records">
- <button type="button" name="exit" style="padding: 0.4em;" class="btn btn-success btn-sm"><span>View</span>  <i class="fa fa-search custom"></i></button></a>
-  &nbsp; &nbsp;
- <a href="index.php?page=<?= $page ?>" data-placement="bottom" title="Go to dashboard"><button style="padding: 0.4em;" type="button" name="exit" class="btn btn-success btn-sm"><i class="fa fa-reply" style="float: none;"></i> &nbsp;<span>Back</span>  </button></a>
-</div>
-</div>
-
-</div> 
-<input name="logid" type="hidden" value="<?=$row['logid']?>" />
- <?php } ?> 
-
-</div>
-</div>
-
-<?php } else { ?>
-
-<div class="col-md-12 col-sm-12 col-xs-12">
-<div class="x_panel">
-                  <div class="x_title">
-                    <h2><?=ucwords($title);?><small> existing records</small></h2>
-					<ul class="nav navbar-right panel_toolbox">
-                     <li><a href="index.php?page=<?= $page ?>&part=1" class="btn btn-sm btn-primary text-white"><i class="fa fa-plus"></i> Create New</a></li>
-                     </ul>
-					<div class="clearfix"></div>
-                  </div>
-<div class="x_content">
-
-<div class="custom-table-wrapper">
-<table id="datatable" role="grid" class="table table-striped table-bordered dataTable table-sm">
-<thead>
-<tr>
-<th width="1px">MemberNo.</th>
-<th>Member Ref</th>
-<th>Group Id</th>
-<th>Name</th>
-<th>Phone No</th>
-<th>Gender</th>
-<th>Medical Condition</th>
-<th>Caregiver Name</th>
-<th>Caregiver Phone</th>
-<th>Registration Date</th>
-<th>Active</th>
-<th align="center">Rx</th>
-<th width="1%">Edit</th> <th width="1%">Del</th> </tr>
-</thead>
-<tfoot>
-<tr>
-  <th>MemberNo.</th>
-  <th>Member Ref</th>
-<th>Group Id</th>
-<th>Name</th>
-<th>Phone No</th>
-<th>Gender</th>
-<th>Medical Condition</th>
-<th>Caregiver Name</th>
-<th>Caregiver Phone</th>
-<th>Registration Date</th>
-<th>Active</th>
-<th  align="center">Rx</th>
-<th></th>
-<th>
-<button name="member_delete" value="Delete" type="submit" class="btn btn-sm btn-danger btn-block" onClick="javascript: return confirm('Please confirm deletion');" /><i class="fa fa-trash"></i></button>
-</th> 
-</tr>
-</tfoot>
-<tbody>
-<?php $mycount=0;
-if($role==4) {
-	$where=" and group_id='".(isset($_SESSION['groupid']) ? $_SESSION['groupid'] : 0)."' ";
-} else {
-	$where=" ";
-}
-
-if(isset($_POST['tbn_search']) && $conn) {
-    $search=$conn->real_escape_string($_POST['search']);
-    $result = @mysqli_query($conn,"SELECT * FROM member where group_id>0 $where and (group_id like '%$search%' OR name like '%$search%' OR phone_no like '%$search%' OR nat_id like '%$search%' OR dob like '%$search%' OR gender like '%$search%' OR medical_condition like '%$search%' OR caregiver_name like '%$search%' OR caregiver_phone like '%$search%' OR registration_date like '%$search%' OR active like '%$search%' OR activation_dt like '%$search%' OR deactivation_dt like '%$search%' OR created_by like '%$search%' OR created_on like '%$search%')");
-} else {
-    $result = $conn ? @mysqli_query($conn,"SELECT * FROM member $where") : null;
-}
-
-if($result && mysqli_num_rows($result) > 0) {
-    while($row = @mysqli_fetch_assoc($result)) { 
-        $mycount=$mycount+1; ?> 				  
-        <tr>
-        <td><?=$row['logid']?></td>
-        <td><a href="index.php?page=member_profile&id=<?=$row['logid']?>"><?=$row['mnumber']?></a></td>
-        <td><?php
-        $qresult = $conn ? mysqli_query($conn,"SELECT name FROM provider_group WHERE logid='".$row['group_id']."'") : null;
-        while($qresult && $drow = mysqli_fetch_assoc($qresult)) {  
-            echo htmlspecialchars($drow['name']);  
-        } ?></td>
-        <td><?php echo htmlspecialchars($row['name'])?></td>
-        <td><?php echo htmlspecialchars($row['phone_no'])?></td>
-        <td><?php echo htmlspecialchars($row['gender'])?></td>
-        <td><?php
-        $qresult = $conn ? mysqli_query($conn,"SELECT description FROM conditions WHERE logid='".$row['medical_condition']."'") : null;
-        while($qresult && $drow = mysqli_fetch_assoc($qresult)) {  
-            echo htmlspecialchars($drow['description']);  
-        } ?></td>
-        <td><?php echo htmlspecialchars($row['caregiver_name'])?></td>
-        <td><?php echo htmlspecialchars($row['caregiver_phone'])?></td>
-        <td><?php echo htmlspecialchars($row['registration_date'])?></td>
-        <td><?php echo htmlspecialchars($row['active'])?></td>
-        <td align="center"><a href="index.php?page=prescription&part=1&m=<?=$row['logid']?>&g=<?=$row['group_id']?>"><i class="fa fa-user-md text-info"></i></a></td>
-        <td align="center"><a href="index.php?page=<?= $page ?>&part=2&rec=<?=$row['logid']?>" data-placement="bottom" title="Go to edit"><i class="fa fa-lg fa-pencil text-primary"></i></a></td>
-        <td align="center"><input name="del[]" id="del[]" type="checkbox" value="<?=$row['logid']?>" /></td>
-        </tr>
-<?php } 
-} else { ?>
-    <tr>
-        <td colspan="14" class="text-center" style="padding: 30px; color: #73879C; font-size: 14px;">
-            <i class="fa fa-info-circle fa-lg"></i> No member records found. Click <a href="index.php?page=<?= $page ?>&part=1" class="alert-link"><u>Create New</u></a> to get started.
-        </td>
-    </tr>
-<?php } ?>
-</tbody>
-</table>
-</div> <input type="hidden" name="txtcount" id="txtcount" value="<?php echo $mycount;?>"> 
-</div>
- 
-</div>
-</div>
-<?php } ?>
-
-</form>
 <?php } ?>

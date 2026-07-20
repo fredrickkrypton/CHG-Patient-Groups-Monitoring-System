@@ -1,478 +1,381 @@
-<?
+<?php
 /*
-Copyright (C) Innovee Systems Erps.This program should NOT be distributed  WITHOUT ANY WARRANTY and LICENSE.
+Copyright (C) Innovee Systems Erps.This program should NOT be distributed WITHOUT ANY WARRANTY and LICENSE.
 */
-//-----------------------------------------------------------------------------
-//
-//	Coder: Timothy Murunga
-//	Email: murunga@innovee.co.ke
-//	Change: 2023-03-22 15:23:28
- 
- 
-//include('header.php');
-$page="mpesa";
-workout($_GET['D']);
-$timestamp=date('Y-m-d H:i:s');
 
-if($part=='') { caniacess($page."_view"); }
-if($part=='1') { caniacess($page."_add"); }
-if($part=='2') { caniacess($page."_edit"); }
-if(isset($_POST['mpesa_delete'])) { caniacess($page."_delete"); }
-if($_SESSION['stop']==1)
-{  include('stop.php'); }
-else 
-{
-//$page="mpesa";
+// TARGET VARIABLE ACCESSIBILITY VIA SUPERGLOBALS
+global $title;
+$conn = isset($GLOBALS['conn']) ? $GLOBALS['conn'] : null;
 
- if(isset($_POST['mpesa_save']))
-{
-$transactiondate=ucwords(($_POST['transactiondate']));
-$phonenumber=ucwords(($_POST['phonenumber']));
-$amount=ucwords(($_POST['amount']));
-$mpesareceiptnumber=ucwords(($_POST['mpesareceiptnumber']));
-$username=$username;
-$timestamp=$timestamp;
+$page = "mpesa";
 
-if(trim($transactiondate)!=''&&trim($phonenumber)!=''&&trim($amount)!=''&&trim($mpesareceiptnumber)!='') { 
+// Ensure variables are safely initialized to avoid notice level errors
+$part = isset($_GET['part']) ? $_GET['part'] : '';
+$rec = isset($_GET['rec']) ? $_GET['rec'] : 0;
+$username = isset($username) ? $username : (isset($_SESSION['username']) ? $_SESSION['username'] : 'System');
+$deleted = 0;
+$alert = '';
+$error = '';
 
-$qresult = mysqli_query($conn,$df="SELECT logid,group_id,regfee FROM member where phone_no='$phonenumber'");
-  while($drow = mysqli_fetch_assoc($qresult))
-    {  
-	$groupid=$drow['group_id'];
-	$memberid=$drow['logid'];
-	$regfee=$drow['regfee'];
-	 }
-if($regfee==1) { $ctype=1; }  else { $ctype=1; }
-	 
-$sql = "INSERT INTO mpesa (transactiondate,phonenumber,amount,mpesareceiptnumber,username,timestamp,groupid,memberid,ctype)
-VALUES ('$transactiondate','$phonenumber','$amount','$mpesareceiptnumber','$username','$timestamp','$groupid','$memberid','$ctype')";
-if ($conn->query($sql) === TRUE) {  $alert=1; audittrail($conn,'mpesa','','inserting',$timestamp,$username); }
- else { $error=("Error: you are duplicating data!"); }
- }   else {  $error="Fill all mandatory fields in red.";  }  
-if($alert!='')
-{
-create_db_sms($conn,3,'member',$phonenumber,$amount);
-//create_db_sms($db,3,'gleader',$phone,$amount);
- 
-	echo "<script> window.addEventListener('load', function () { 
-	new PNotify({
-                                  title: 'Success',
-                                  text: 'Data saved successfully!',
-								  nonblock: { nonblock: !0 },
-                                  type: 'success',
-                                  styling: 'bootstrap3'
-                              }); }) </script>";
+// SAFE CHECK: Handles URL parameter unpacking cleanly if workout() is undefined
+if (function_exists('workout')) {
+    if (isset($_GET['D'])) { workout($_GET['D']); }
+} else {
+    if (!empty($_GET['D'])) {
+        parse_str(base64_decode($_GET['D']), $output);
+        foreach ($output as $key => $val) {
+            $$key = $val;
+        }
+    }
 }
-if($error!='')
-{
-	echo "<script> window.addEventListener('load', function () { 
-	new PNotify({
-                                  title: 'Error',
-                                  text: '$error',
-								  nonblock: { nonblock: !0 },
-                                  type: 'error',
-                                  styling: 'bootstrap3'
-                              }); }) </script>";
+
+$timestamp = date('Y-m-d H:i:s');
+
+if (function_exists('caniacess')) {
+    if($part == '') { caniacess($page."_view"); }
+    if($part == '1') { caniacess($page."_add"); }
+    if($part == '2') { caniacess($page."_edit"); }
+    if(isset($_POST['mpesa_delete'])) { caniacess($page."_delete"); }
 }
+
+if(isset($_SESSION['stop']) && $_SESSION['stop'] == 1) {  
+    include('stop.php'); 
+} else {
+
+//---------------------------------------------------------------------------------------------------- 
+// INSERT/SAVE LOGIC
+if(isset($_POST['mpesa_save'])) {
+    $transactiondate    = ucwords($_POST['transactiondate']);
+    $phonenumber        = ucwords($_POST['phonenumber']);
+    $amount             = ucwords($_POST['amount']);
+    $mpesareceiptnumber = strtoupper($_POST['mpesareceiptnumber']); // standardizing transaction codes to uppercase
+
+    $created_by = $username;
+    $created_on = $timestamp;
+
+    if(trim($transactiondate) != '' && trim($phonenumber) != '' && trim($amount) != '' && trim($mpesareceiptnumber) != '') { 
+        $sql = "INSERT INTO mpesa (transactiondate, phonenumber, amount, mpesareceiptnumber, username, timestamp)
+                VALUES ('$transactiondate', '$phonenumber', '$amount', '$mpesareceiptnumber', '$created_by', '$created_on')";
+        if ($conn && $conn->query($sql) === TRUE) {  
+            $alert = 1; 
+            if(function_exists('audittrail')) { audittrail($conn, 'mpesa', '', 'inserting', $timestamp, $username); }
+        } else { 
+            $error = "Error saving deposit transaction."; 
+            if($conn) { $error .= " " . $conn->error; }
+        }
+    } else {  
+        $error = "All fields are mandatory. Please fill in missing details.";  
+    }  
+    
+    if($alert != '') {
+        echo "<script> window.addEventListener('load', function () { 
+            new PNotify({ title: 'Success', text: 'Deposit record added successfully!', nonblock: { nonblock: !0 }, type: 'success', styling: 'bootstrap3' }); }) </script>";
+    }
+    if($error != '') {
+        echo "<script> window.addEventListener('load', function () { 
+            new PNotify({ title: 'Error', text: '$error', nonblock: { nonblock: !0 }, type: 'error', styling: 'bootstrap3' }); }) </script>";
+    }
 }  
  
- //---------------------------------------------------------------------------------------------------- 
- if(isset($_POST['mpesa_update']))
-{
-$transactiondate=ucwords(($_POST['transactiondate']));
-$phonenumber=ucwords(($_POST['phonenumber']));
-$amount=ucwords(($_POST['amount']));
-$mpesareceiptnumber=ucwords(($_POST['mpesareceiptnumber']));
-$username=$username;
-$timestamp=$timestamp;
-$logid=$_POST['logid'];
+//---------------------------------------------------------------------------------------------------- 
+// UPDATE LOGIC
+if(isset($_POST['mpesa_update'])) {
+    $transactiondate    = ucwords($_POST['transactiondate']);
+    $phonenumber        = ucwords($_POST['phonenumber']);
+    $amount             = ucwords($_POST['amount']);
+    $mpesareceiptnumber = strtoupper($_POST['mpesareceiptnumber']);
+    $logid              = $_POST['logid'];
 
-if(trim($transactiondate)!=''&&trim($phonenumber)!=''&&trim($amount)!=''&&trim($mpesareceiptnumber)!='') { 
-
-$qresult = mysqli_query($conn,$df="SELECT logid,group_id,regfee FROM member where phone_no='$phonenumber'");
-  while($drow = mysqli_fetch_assoc($qresult))
-    {  
-	$groupid=$drow['group_id'];
-	$memberid=$drow['logid'];
-	$regfee=$drow['regfee'];
-	 }
-if($regfee==1) { $ctype=1; }  else { $ctype=1; }
-
-$sql = "UPDATE  mpesa SET  transactiondate='$transactiondate',phonenumber='$phonenumber',amount='$amount',mpesareceiptnumber='$mpesareceiptnumber',username='$username',timestamp='$timestamp',groupid='$groupid',memberid='$memberid',ctype='$ctype' WHERE logid='$logid'";
-if ($conn->query($sql) === TRUE) {  $alert=1; audittrail($conn,'mpesa',$logid,'updatings',$timestamp,$username); }
- else { $error=("Error: you are duplicating data!"); }
- }   else {  $error="Fill all mandatory fields in red.";  }  
-if($alert!='')
-{
-	echo "<script> window.addEventListener('load', function () { 
-	new PNotify({
-                                  title: 'Success',
-                                  text: 'Data updated successfully!',
-								  nonblock: { nonblock: !0 },
-                                  type: 'success',
-                                  styling: 'bootstrap3'
-                              }); }) </script>";
-}
-if($error!='')
-{
-	echo "<script> window.addEventListener('load', function () { 
-	new PNotify({
-                                  title: 'Error',
-                                  text: '$error',
-								  nonblock: { nonblock: !0 },
-                                  type: 'error',
-                                  styling: 'bootstrap3'
-                              }); }) </script>";
-}
+    if(trim($mpesareceiptnumber) != '') { 
+        $sql = "UPDATE mpesa SET transactiondate='$transactiondate', phonenumber='$phonenumber', amount='$amount', mpesareceiptnumber='$mpesareceiptnumber' WHERE logid='$logid'";
+        if ($conn && $conn->query($sql) === TRUE) {  
+            $alert = 1; 
+            if(function_exists('audittrail')) { audittrail($conn, 'mpesa', $logid, 'updatings', $timestamp, $username); }
+        } else { 
+            $error = "Error updating deposition reference log."; 
+        }
+    } else {  
+        $error = "Receipt reference cannot be empty.";  
+    }  
+    
+    if($alert != '') {
+        echo "<script> window.addEventListener('load', function () { 
+            new PNotify({ title: 'Success', text: 'Transaction updated successfully!', nonblock: { nonblock: !0 }, type: 'success', styling: 'bootstrap3' }); }) </script>";
+    }
+    if($error != '') {
+        echo "<script> window.addEventListener('load', function () { 
+            new PNotify({ title: 'Error', text: '$error', nonblock: { nonblock: !0 }, type: 'error', styling: 'bootstrap3' }); }) </script>";
+    }
 }  
  
- //---------------------------------------------------------------------------------------------------- 
- if(isset($_POST['mpesa_delete']))
-{ 
-$count = $_POST['txtcount'];
-for($i=0;$i<$count;$i++){ 
-      if($_POST['del'][$i]!='')
-	  { 
-	  audittrail($conn,'mpesa',$_POST['del'][$i],'deleting',$timestamp,$username);
-	  
-     $sql = "DELETE FROM mpesa  WHERE logid='".$_POST['del'][$i]."'";
-if ($conn->query($sql) === TRUE) { $deleted=$deleted+1; }
-	  }  
-   } 
-	  if ($deleted>0) { $alert=1; } else { $error="No record selected"; }
-if($alert!='')
-{
-	echo "<script> window.addEventListener('load', function () { 
-	new PNotify({
-                                  title: 'Success',
-                                  text: 'Deleted successfully',
-								  nonblock: { nonblock: !0 },
-                                  type: 'success',
-                                  styling: 'bootstrap3'
-                              }); }) </script>";
+//---------------------------------------------------------------------------------------------------- 
+// DELETE LOGIC
+if(isset($_POST['mpesa_delete'])) { 
+    $count = isset($_POST['txtcount']) ? $_POST['txtcount'] : 0;
+    for($i=0; $i<$count; $i++) { 
+        if(!empty($_POST['del'][$i])) { 
+            if(function_exists('audittrail')) {
+                audittrail($conn, 'mpesa', $_POST['del'][$i], 'deleting', $timestamp, $username);
+            }
+            $sql = "DELETE FROM mpesa WHERE logid='".$_POST['del'][$i]."'";
+            if ($conn && $conn->query($sql) === TRUE) { $deleted++; }
+        }  
+    } 
+    if ($deleted > 0) { $alert = 1; } else { $error = "No record selected"; }
+    
+    if($alert != '') {
+        echo "<script> window.addEventListener('load', function () { 
+            new PNotify({ title: 'Success', text: 'Transaction removed safely.', nonblock: { nonblock: !0 }, type: 'success', styling: 'bootstrap3' }); }) </script>";
+    }
+    if($error != '') {
+        echo "<script> window.addEventListener('load', function () { 
+            new PNotify({ title: 'Error', text: '$error', nonblock: { nonblock: !0 }, type: 'error', styling: 'bootstrap3' }); }) </script>";
+    }	  
 }
-if($error!='')
-{
-	echo "<script> window.addEventListener('load', function () { 
-	new PNotify({
-                                  title: 'Error',
-                                  text: '',
-								  nonblock: { nonblock: !0 },
-                                  type: 'error',
-                                  styling: 'bootstrap3'
-                              }); }) </script>";
-}	  
-}
- //---------------------------------------------------------------------------------------------------- 
- _title($title='Mpesa'); ?>
 
-<form method='POST' action='' class='rounded' name='mpesa' style='min-width:70%'  enctype='multipart/form-data'>
+$display_title = 'Deposits Tracking';
+if (function_exists('_title')) {
+    _title($title = $display_title); 
+} ?>
 
+<style>
+  .custom-table-wrapper {
+    width: 100% !important;
+    overflow-x: auto !important;
+    margin-top: 15px;
+    background: #fff;
+    border: 1px solid #e3e6f0;
+    border-radius: 4px;
+    padding: 10px;
+  }
+  .custom-table-wrapper table {
+    width: 100% !important;
+    max-width: none !important;
+    white-space: nowrap !important;
+  }
+  .custom-table-wrapper th, .custom-table-wrapper td {
+    padding: 10px 14px !important;
+    vertical-align: middle !important;
+    font-size: 13px !important;
+  }
+  .custom-table-wrapper th {
+    background-color: #f8f9fc !important;
+    color: #4e73df !important;
+    font-weight: 700 !important;
+  }
+  .manda { color: #ff0000; font-weight: bold; }
+</style>
 
-									
-<? if($part=='1')
-{ ?>
+<div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <form method='POST' action='' class='form-horizontal form-label-left' name='mpesa' style='min-width:100%' enctype='multipart/form-data'>
+                                            
+        <?php if($part=='1') { ?>
+        <div class='col-md-8 offset-md-2 col-sm-12'>
+            <div class='x_panel'>
+                <div class='x_title'>
+                    <h2><?=ucwords($display_title);?><small> new ledger log</small></h2>
+                    <div class='clearfix'></div>
+                </div>
+                <div class='x_content'>
+                    <br />
+                    
+                    <div class="item form-group row">
+                        <label for="transactiondate" class="col-form-label col-md-3 col-sm-3 label-align">Transaction Date <span class="manda">*</span> :</label>
+                        <div class="col-md-8 col-sm-8">
+                            <input type="date" required="required" class="form-control form-control-sm" name="transactiondate" id="transactiondate" value="<?=date('Y-m-d')?>">
+                        </div>
+                    </div>
 
-<div class='col-md-8 offset-2'>
-                <div class='x_panel'>
-                  <div class='x_title'>
-                    <h2><?=ucwords($title);?><small>new entry</small></h2>
-					<ul class='nav navbar-right panel_toolbox'>
-                      <li><a class='link'><i class='fa fa-chevron-up'></i></a>
-                      </li>
-                     </ul>
-					<div class='clearfix'></div>
-                  </div>
-					<div class='x_content  center-block'>
-					
- 
-<!--fields-->
- <div class="item form-group">
-<label for="transactiondate" class="col-sm-3 manda">Transactiondate : </label>
-<div class="col-sm-8">
-<input type="date"  required='required' class="form-control form-control-sm manda" name="transactiondate" id="transactiondate" placeholder="Transactiondate" value="<? echo date('Y-m-d')?>" autocomplete="off" onblur="js_validate(this,'general')">
+                    <div class="item form-group row">
+                        <label for="phonenumber" class="col-form-label col-md-3 col-sm-3 label-align">Phone Number <span class="manda">*</span> :</label>
+                        <div class="col-md-8 col-sm-8">
+                            <input type="text" required="required" class="form-control form-control-sm" name="phonenumber" id="phonenumber" placeholder="e.g. 254712345678" autocomplete="off">
+                        </div>
+                    </div>
+
+                    <div class="item form-group row">
+                        <label for="amount" class="col-form-label col-md-3 col-sm-3 label-align">Amount Deposited <span class="manda">*</span> :</label>
+                        <div class="col-md-8 col-sm-8">
+                            <input type="number" step="0.01" required="required" class="form-control form-control-sm" name="amount" id="amount" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div class="item form-group row">
+                        <label for="mpesareceiptnumber" class="col-form-label col-md-3 col-sm-3 label-align">Receipt Reference ID <span class="manda">*</span> :</label>
+                        <div class="col-md-8 col-sm-8">
+                            <input type="text" required="required" class="form-control form-control-sm" name="mpesareceiptnumber" id="mpesareceiptnumber" placeholder="e.g. QX789JK12" autocomplete="off">
+                        </div>
+                    </div>
+
+                    <div class="ln_solid"></div>
+                    <div class="form-group row text-center">
+                        <div class="col-md-12">
+                            <button type="submit" name="mpesa_save" class="btn btn-success btn-sm"><span>Save Log</span> <i class="fa fa-save"></i></button>
+                            &nbsp; &nbsp;
+                            <a href="index.php?page=<?=$page?>&part=1" class="btn btn-primary btn-sm"><span>New</span> <i class="fa fa-file"></i></a>
+                            &nbsp; &nbsp;
+                            <a href="index.php?page=<?=$page?>" class="btn btn-info btn-sm"><span>View Records</span> <i class="fa fa-search"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <?php } elseif($part=='2') { ?>
+        <div class='col-md-8 offset-md-2 col-sm-12'>
+            <div class='x_panel'>
+                <div class='x_title'>
+                    <h2><?=ucwords($display_title);?><small> edit transaction summary</small></h2>
+                    <div class='clearfix'></div>
+                </div>
+                <div class='x_content'>
+                    <br />
+                    <?php 
+                    $result = $conn ? mysqli_query($conn,"SELECT * FROM mpesa WHERE logid='$rec'") : null;
+                    while($result && $row = mysqli_fetch_assoc($result)) { ?> 
+                        
+                        <div class="item form-group row">
+                            <label for="transactiondate" class="col-form-label col-md-3 col-sm-3 label-align">Transaction Date <span class="manda">*</span> :</label>
+                            <div class="col-md-8 col-sm-8">
+                                <input type="text" required="required" class="form-control form-control-sm" name="transactiondate" id="transactiondate" value="<?php echo htmlspecialchars($row['transactiondate'] ?? '')?>">
+                            </div>
+                        </div>
+
+                        <div class="item form-group row">
+                            <label for="phonenumber" class="col-form-label col-md-3 col-sm-3 label-align">Phone Number <span class="manda">*</span> :</label>
+                            <div class="col-md-8 col-sm-8">
+                                <input type="text" required="required" class="form-control form-control-sm" name="phonenumber" id="phonenumber" value="<?php echo htmlspecialchars($row['phonenumber'] ?? '')?>">
+                            </div>
+                        </div>
+
+                        <div class="item form-group row">
+                            <label for="amount" class="col-form-label col-md-3 col-sm-3 label-align">Amount Deposited <span class="manda">*</span> :</label>
+                            <div class="col-md-8 col-sm-8">
+                                <input type="number" step="0.01" required="required" class="form-control form-control-sm" name="amount" id="amount" value="<?php echo htmlspecialchars($row['amount'] ?? '')?>">
+                            </div>
+                        </div>
+
+                        <div class="item form-group row">
+                            <label for="mpesareceiptnumber" class="col-form-label col-md-3 col-sm-3 label-align">Receipt Reference ID <span class="manda">*</span> :</label>
+                            <div class="col-md-8 col-sm-8">
+                                <input type="text" required="required" class="form-control form-control-sm" name="mpesareceiptnumber" id="mpesareceiptnumber" value="<?php echo htmlspecialchars($row['mpesareceiptnumber'] ?? '')?>">
+                            </div>
+                        </div>
+
+                        <div class="ln_solid"></div>
+                        <div class="form-group row text-center">
+                            <div class="col-md-12">
+                                <button type="submit" name="mpesa_update" class="btn btn-success btn-sm"><span>Update Log</span> <i class="fa fa-save"></i></button>
+                                &nbsp; &nbsp; 
+                                <a href="index.php?page=<?=$page?>&part=1" class="btn btn-primary btn-sm"><span>New</span> <i class="fa fa-file"></i></a>
+                                &nbsp; &nbsp; 
+                                <a href="index.php?page=<?=$page?>" class="btn btn-info btn-sm"><span>View</span> <i class="fa fa-search"></i></a>
+                            </div>
+                        </div> 
+                        <input name="logid" type="hidden" value="<?=$row['logid']?>" />
+                    <?php } ?> 
+                </div>
+            </div>
+        </div>
+
+        <?php } else { ?>
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2><?=ucwords($display_title);?><small> incoming transaction trace logs</small></h2>
+                    <ul class="nav navbar-right panel_toolbox" style="list-style: none;">
+                        <li><a href="index.php?page=<?=$page?>&part=1" class="btn btn-sm btn-primary text-white"><i class="fa fa-plus"></i> Add Deposit Entry</a></li>
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <div class="custom-table-wrapper">
+                        <table id="datatable" role="grid" class="table table-striped table-bordered dataTable table-sm">
+                            <thead>
+                                <tr>
+                                    <th width="5%">#</th>
+                                    <th>Transaction Date</th>
+                                    <th>Payer Account / Member Name</th>
+                                    <th>Amount Paid</th>
+                                    <th>Receipt Ref Number</th>
+                                    <th>Allocation Type</th>
+                                    <th>Handled By</th>
+                                    <th>System Timestamp</th>
+                                    <th width="1%">Edit</th> 
+                                    <th width="1%">Del</th> 
+                                </tr>
+                            </thead>
+                            <tfoot>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Transaction Date</th>
+                                    <th>Payer Account / Member Name</th>
+                                    <th>Amount Paid</th>
+                                    <th>Receipt Ref Number</th>
+                                    <th>Allocation Type</th>
+                                    <th>Handled By</th>
+                                    <th>System Timestamp</th>
+                                    <th></th>
+                                    <th>
+                                        <button name="mpesa_delete" value="Delete" type="submit" class="btn btn-sm btn-danger btn-block" onClick="javascript: return confirm('Please confirm deletion');"><i class="fa fa-trash"></i></button>
+                                    </th> 
+                                </tr>
+                            </footer>
+                            <tbody>
+                            <?php $mycount=0;
+                            if(isset($_POST['tbn_search']) && $conn) {
+                                $search = $conn->real_escape_string($_POST['search']);
+                                $result = mysqli_query($conn,"SELECT * FROM mpesa WHERE phonenumber LIKE '%$search%' OR mpesareceiptnumber LIKE '%$search%' OR username LIKE '%$search%'");
+                            } else {
+                                $result = $conn ? mysqli_query($conn,"SELECT * FROM mpesa ORDER BY logid DESC") : null;
+                            }
+
+                            if($result && mysqli_num_rows($result) > 0) {
+                                while($row = mysqli_fetch_assoc($result)) { $mycount++; ?> 				  
+                                    <tr>
+                                        <td><?=$mycount?></td>
+                                        <td><?php echo htmlspecialchars($row['transactiondate'] ?? '')?></td>
+                                        <td><?php
+                                            $phone = $row['phonenumber'];
+                                            $m_q = mysqli_query($conn, "SELECT name FROM member WHERE phone_no='$phone'");
+                                            if ($m_q && mysqli_num_rows($m_q) > 0) {
+                                                $m_data = mysqli_fetch_assoc($m_q);
+                                                echo htmlspecialchars($m_data['name']) . ' - (' . htmlspecialchars($phone) . ')';
+                                            } else {
+                                                echo 'Unmapped Source - (' . htmlspecialchars($phone) . ')';
+                                            }
+                                        ?></td>
+                                        <td><strong><?php echo number_format((float)($row['amount'] ?? 0), 2)?></strong></td>
+                                        <td><code class="text-dark"><strong><?php echo htmlspecialchars($row['mpesareceiptnumber'] ?? '')?></strong></td>
+                                        <td><span class="badge badge-success">Contribution / Premium</span></td>
+                                        <td><?php echo htmlspecialchars($row['username'] ?? '')?></td>
+                                        <td><?php echo htmlspecialchars($row['timestamp'] ?? '')?></td>
+                                        <td align="center">
+                                            <a href="index.php?page=<?=$page?>&part=2&rec=<?=$row['logid']?>" title="Go to edit"><i class="fa fa-lg fa-pencil text-primary"></i></a>
+                                        </td>
+                                        <td align="center">
+                                            <input name="del[]" id="del[]" type="checkbox" value="<?=$row['logid']?>" />
+                                        </td>
+                                    </tr>
+                                <?php } 
+                            } else { ?>
+                                <tr>
+                                    <td colspan="10" class="text-center" style="padding: 30px; color: #73879C; font-size: 14px;">
+                                        <i class="fa fa-info-circle fa-lg"></i> No mobile deposits logged. Click <a href="index.php?page=<?=$page?>&part=1" class="alert-link"><u>Add Deposit Entry</u></a> to balance the module tracking system.
+                                    </td>
+                                </tr>
+                            <?php } ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <input type="hidden" name="txtcount" id="txtcount" value="<?php echo $mycount;?>"> 
+                </div>
+            </div>
+        </div>
+        <?php } ?>
+
+        </form>
+    </div>
 </div>
-</div>
-
-<div class="item form-group"><label for="phonenumber" class="col-sm-3 manda">Member  : </label>
-<div class="col-sm-8"> 
-<select class="form-control manda" id="phonenumber" name="phonenumber"  required='required'>
-<? if($_POST['phonenumber'])
-{ $qresult = mysqli_query($conn,"SELECT logid,name,phone_no FROM member where logid='".$_POST['phonenumber']."'");
-  while($drow = mysqli_fetch_assoc($qresult))
-    { ?><option value="<? echo $drow['phone_no']?>"><? echo $drow['phone_no']?> <? echo $drow['name']?></option><? }
- } else {
-$qresult = mysqli_query($conn,"SELECT logid,name,phone_no FROM member where logid='".$row['phonenumber']."'");
-  while($drow = mysqli_fetch_assoc($qresult))
-    { ?><option value="<? echo $drow['phone_no']?>"><? echo $drow['phone_no']?> <? echo $drow['name']?></option><? } 
-	 
- }?>
-<option value="">Select Member</option><?
-if($_SESSION['userrole']==4)
-{
-	$group_id=" where group_id='".$_SESSION['groupid']."' ";
-}
-else {
-	$group_id=" where group_id!=''";
-}
-$qresult = mysqli_query($conn,$df="SELECT logid,name,phone_no FROM member $group_id ORDER BY name");
-  while($drow = mysqli_fetch_assoc($qresult))
-    { ?><option value="<? echo $drow['phone_no']?>"><? echo $drow['phone_no']?> <? echo $drow['name']?></option>
-<? } ?>
-</select>
-</div>
-</div>
-
- <div class="item form-group">
-<label for="amount" class="col-sm-3 manda">Amount : </label>
-<div class="col-sm-8">
-<input type="text"  required='required' class="form-control form-control-sm manda" name="amount" id="amount" placeholder="Amount" value="<? echo $_POST['amount']?>" autocomplete="off" onblur="js_validate(this,'numeric')">
-</div>
-</div>
-
- <div class="item form-group">
-<label for="mpesareceiptnumber" class="col-sm-3 manda">Mpesa Reference : </label>
-<div class="col-sm-8">
-<input type="text"  required='required' class="form-control form-control-sm manda" name="mpesareceiptnumber" id="mpesareceiptnumber" placeholder="Mpesa Reference" value="<? echo $_POST['mpesareceiptnumber']?>" autocomplete="off" onblur="js_validate(this,'general')">
-</div>
-</div>
-
-
-
-<br />
-<div class="ln_solid"></div>
-<div class="form-group row text-center">
-<div class="col-md">
-
- <button data-placement="bottom" title="Save data" type="submit" name="mpesa_save" style="padding: 0.4em;" class="btn btn-success btn-sm"><span>Save</span>  <i class="fa fa-save"></i></button>
- 
-
-&nbsp; &nbsp;
-
-<a href="?/<?=$page?>&D=<? echo osteens('part=1')?>" data-placement="bottom" title="Add New Record">
-<button type="button" name="new" style="padding: 0.4em;" class="btn btn-success btn-sm"><span>New</span>  <i class="fa fa-file custom"></i></button></a>
-
-&nbsp; &nbsp;
-
-<a href="?/<?=$page?>" data-placement="bottom" title="Go to records">
-<button type="button" name="exit" style="padding: 0.4em;" class="btn btn-success btn-sm">
-<span>View</span>  <i class="fa fa-search custom"></i></button></a>
-
-&nbsp; &nbsp;
-
-<a href="?/<?=$page?>" data-placement="bottom" title="Go to dashboard"><button style="padding: 0.4em;" type="button" name="exit" class="btn btn-success btn-sm btn-info"><i class="fa fa-reply" style="float: none;"></i> &nbsp;
-<span>Back</span> </button></a>
-</div>
-</div>
-</div>
-</div>
-</div>
-
-
-<? } 
- elseif($part=='2') { ?><div class='col-md-8 offset-2'>
-                <div class='x_panel'>
-                  <div class='x_title'>
-                    <h2><?=ucwords($title);?><small>update entry</small></h2>
-					<ul class='nav navbar-right panel_toolbox'>
-                      <li><a class='link'><i class='fa fa-chevron-up'></i></a>
-                      </li>
-                     </ul>
-					<div class='clearfix'></div>
-                  </div>
-					<div class='x_content center-block'>
-
-<!--fields-->
-<? $result = mysqli_query($conn,"SELECT * FROM mpesa WHERE  logid='$rec'");
-  while($row = mysqli_fetch_assoc($result))
-    { ?> 
-<div class="item form-group"><label for="transactiondate" class="col-sm-3 manda">Transactiondate : </label>
-<div class="col-sm-8"> 
-<input type="date"  required='required' class="form-control form-control-sm manda" name="transactiondate" id="transactiondate" placeholder="Transactiondate" value="<? echo $row['transactiondate']?>" autocomplete="off"  onblur="js_validate(this,'general')">
-</div>
-</div>
-<div class="item form-group"><label for="phonenumber" class="col-sm-3 manda">Phone number : </label>
-<div class="col-sm-8">
-<select class="form-control manda" id="phonenumber" name="phonenumber"  required='required'>
-<? if($_POST['phonenumber'])
-{ $qresult = mysqli_query($conn,"SELECT logid,name,phone_no FROM member where phone_no='".$_POST['phonenumber']."'");
-  while($drow = mysqli_fetch_assoc($qresult))
-    { ?><option value="<? echo $drow['phone_no']?>"><? echo $drow['phone_no']?> <? echo $drow['name']?></option><? }
- } else {
-$qresult = mysqli_query($conn,"SELECT logid,name,phone_no FROM member where phone_no='".$row['phonenumber']."'");
-  while($drow = mysqli_fetch_assoc($qresult))
-    { ?><option value="<? echo $drow['phone_no']?>"><? echo $drow['phone_no']?> <? echo $drow['name']?></option><? } 
-	 
- }?>
-<option value="">Select Member</option><?
-if($_SESSION['userrole']==4)
-{
-	$group_id=" where group_id='".$_SESSION['groupid']."' ";
-}
-else {
-	$group_id=" where group_id!=''";
-}
-$qresult = mysqli_query($conn,$df="SELECT logid,name,phone_no FROM member $group_id ORDER BY name");
-  while($drow = mysqli_fetch_assoc($qresult))
-    { ?><option value="<? echo $drow['phone_no']?>"><? echo $drow['phone_no']?> <? echo $drow['name']?></option>
-<? } ?>
-</select>
-</div>
-</div><div class="item form-group"><label for="amount" class="col-sm-3 manda">Amount : </label>
-<div class="col-sm-8"> 
-<input type="text"  required='required' class="form-control form-control-sm manda" name="amount" id="amount" placeholder="Amount" value="<? echo $row['amount']?>" autocomplete="off"  onblur="js_validate(this,'numeric')">
-</div>
-</div>
-<div class="item form-group"><label for="mpesareceiptnumber" class="col-sm-3 manda">Mpesa Reference : </label>
-<div class="col-sm-8"> 
-<input type="text"  required='required' class="form-control form-control-sm manda" name="mpesareceiptnumber" id="mpesareceiptnumber" placeholder="Mpesa Reference" value="<? echo $row['mpesareceiptnumber']?>" autocomplete="off"  onblur="js_validate(this,'general')">
-</div>
-</div>
-<br />
-<div class="ln_solid"></div>
-<div class="form-group row text-center">
-<div class="col-md">
-
- 
- <button data-placement="bottom" title="Update data" type="submit" name="mpesa_update" style="padding: 0.4em;" class="btn btn-success btn-sm"><span>Update</span>  <i class="fa fa-save"></i></button>
-
-&nbsp; &nbsp; 
-
-<a href="?/<?=$page?>&D=<? echo osteens('part=1')?>" data-placement="bottom" title="Add New Record">
-<button type="button" name="new" style="padding: 0.4em;" class="btn btn-success btn-sm"><span>New</span>  <i class="fa fa-file custom"></i></button></a>
-
-&nbsp; &nbsp; 
-
-<a href="?/<?=$page?>" data-placement="bottom" title="Go to records">
-<button type="button" name="exit" style="padding: 0.4em;" class="btn btn-success btn-sm">
-<span>View</span>  <i class="fa fa-search custom"></i></button></a>
-
- &nbsp; &nbsp;
-
-<a href="?/<?=$page?>" data-placement="bottom" title="Go to dashboard"><button style="padding: 0.4em;" type="button" name="exit" class="btn btn-success btn-sm"><i class="fa fa-reply" style="float: none;"></i> &nbsp;
-<span>Back</span>  </button></a>
- 
-
-</div>
-</div>
-</div> 
-<input name="logid" type="hidden" value="<?=$row['logid']?>" />
- <? } ?> 
-
-
-</div>
-</div>
-<?  } else { ?>
-<div class="col-md-12 col-sm-12 col-xs-12">
-<div class="x_panel">
-                  <div class="x_title">
-                    <h2><?=ucwords($title);?><small> existing records</small></h2>
-					<ul class="nav navbar-right panel_toolbox">
-                     <li><a href="?/<?=$page?>&D=<? echo osteens('part=1')?>" class="link"><i class="fa fa-plus"></i> Create</a>
-                     </ul>
-					<div class="clearfix"></div>
-                  </div>
-<div class="x_content">
-
- 											 
-												 
-<table id="datatable" style="width: 100%;" role="grid" aria-describedby="datatable_info" class="table table-striped table-bordered dataTable table-sm">
-<thead>
-<tr>
-<th width="1px">#</th>
-<th>Transactiondate</th>
-<th>Phone Number</th>
-<th>Amount</th>
-<th>Mpesa Reference</th>
-<th>Fee Type</th>
-<th>Username</th>
-<th>Timestamp</th>
-<th width="1%">Edit</th> <th width="1%">Del</th> </tr>
-</thead>
-<tfoot>
-<tr>
-<th>#</th>
-<th>Transactiondate</th>
-<th>Phone Number</th>
-<th>Amount</th>
-<th>Mpesa Reference</th>
-<th>Fee Type</th>
-<th>Username</th>
-<th>Timestamp</th>
-<th></th>
-<th>
-<button   name="mpesa_delete" value="Delete" type="submit" class="button sample btn-sm btn-secondary btntim-sample btntim-nbuttun" onClick="javascript: return confirm('Please confirm deletion');" /><i class="fa fa-trash"></i></button>
-
-</th> 
-</tr>
-</tfoot>
-<tbody>
-<? $mycount=0;
-if($_SESSION['userrole']==4)
-{
-	$group_id=" where groupid='".$_SESSION['groupid']."' ";
-}
-else {
-	$group_id=" where phonenumber!=''";
-}
- if(isset($_POST['tbn_search']))
-{
-$search=$_POST['search'];
-$result = mysqli_query($conn,$fg="SELECT * FROM mpesa $group_id and transactiondate like '%$search%' OR phonenumber like '%$search%' OR amount like '%$search%' OR mpesareceiptnumber like '%$search%' OR username like '%$search%' OR timestamp like '%$search%'");
- }
-else {
-$result = mysqli_query($conn,$fg="SELECT * FROM mpesa $group_id");
-}
-  $fg;
-  while($row = mysqli_fetch_assoc($result))
-    { $mycount=$mycount+1; ?> 				  
-<tr>
-<td><?=$mycount?></td>
-<td><? echo $row['transactiondate']?></td>
-<td><?
-$qresult = mysqli_query($conn,"SELECT  name FROM member WHERE phone_no='".$row['phonenumber']."'");
-  while($drow = mysqli_fetch_assoc($qresult))
-    {  echo $drow['name'];  } echo ' - '.$row['phonenumber']?></td>
-<td><? echo $row['amount']?></td>
-<td><? echo $row['mpesareceiptnumber']?></td>
-<td><?  echo "Contribution";   ?></td>
-<td><? echo $row['username']?></td>
-<td><? echo $row['timestamp']?></td>
-
-<td  align="center"><? $edit="part=2&rec=".$row['logid']; ?>
-<a href="?/<?=$page?>&D=<? echo osteens($edit)?>" data-placement="bottom" title="Go to edit"><i class="fa fa-lg fa-pencil"></i></a></td>
-<td   align="center">
-<input name="del[]" id="del[]" type="checkbox" value="<?=$row['logid']?>" />
-</td>
-</tr>
-<? } ?>
-
-</tbody>
-</table>
-<input type="hidden" name="txtcount" id="txtcount" value="<? echo $mycount;?>"> 
-</div>
- 
- 
-</div>
-</div>
-  <? } ?>
-
- 
-</form>
-<? } ?>
-<script>
-$(document).ready(function() {
-	
-	$('#transactiondate').daterangepicker({
-         locale: {
-      format: 'DD-MM-YYYY'
-    },
-	singleDatePicker: true,
-		   
-
-        });
-
-} );
-</script>
-<?php //include("footer.php"); ?>
-					 
+<?php } ?>
