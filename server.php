@@ -9,7 +9,7 @@ $Appnameversion=" v.1.0.0 ™ <a href='http://innovee.co.ke'> Innovee</a>";
 $Appurl = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
 $timestamp=date('Y-m-d H:i:s');
 
-$_SESSION['conn'] = $conn = mysqli_connect('127.0.0.1', 'root', '', 'afya', 3307);
+$_SESSION['conn'] = $conn = mysqli_connect('127.0.0.1', 'root', '', 'afya', 3306);
 if (!$conn) {
     die('CONNECTION FAILED: ' . mysqli_connect_error());
 } else {

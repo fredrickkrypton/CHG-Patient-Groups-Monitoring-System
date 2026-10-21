@@ -2,6 +2,7 @@
 
 // 1. Load the database connection first
 include('db.php'); 
+#echo "<pre>DEBUG function exists: " . (function_exists('caniacess') ? 'YES' : 'NO') . "</pre>";
 
 $timestamp = date('Y-m-d H:i:s');
 $part = 2;
@@ -14,6 +15,8 @@ if($part == '') { if(function_exists('caniacess')) { caniacess($page."_view"); }
 if($part == '1') { if(function_exists('caniacess')) { caniacess($page."_add"); } }
 if($part == '2') { if(function_exists('caniacess')) { caniacess($page."_edit"); } }
 if(isset($_POST['delete'])) { if(function_exists('caniacess')) { caniacess($page."_delete"); } }
+#echo "<pre>DEBUG allaccess: " . ($_SESSION['allaccess'] ?? 'NOT SET') . "</pre>";
+#echo "<pre>DEBUG stop: " . ($_SESSION['stop'] ?? 'NOT SET') . "</pre>";
 
 // Fix Undefined array key "stop" check safely
 if(isset($_SESSION['stop']) && $_SESSION['stop'] == 1) {   
