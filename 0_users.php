@@ -513,4 +513,192 @@ if (function_exists('_title')) {
         </form>
     </div>
 </div>
+<style>
+/* ---------- Panel ---------- */
+form[name='0_users'] .x_panel {
+    background: #fff;
+    border: 1px solid #e3e8ee;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .06);
+    overflow: hidden;
+    margin: 1rem auto;
+}
+form[name='0_users'] .x_title {
+    background: #f7f9fc;
+    border-bottom: 1px solid #e3e8ee;
+    padding: 14px 20px;
+    margin: 0;
+}
+form[name='0_users'] .x_title h2 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #1a73e8;
+    margin: 0;
+}
+form[name='0_users'] .x_title h2 small {
+    margin-left: 10px;
+    font-size: .75rem;
+    font-weight: 400;
+    color: #8a94a6;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+form[name='0_users'] .x_content {
+    padding: 24px 28px;
+}
+
+/* ---------- Labels ---------- */
+form[name='0_users'] .item.form-group {
+    margin-bottom: 18px;
+}
+form[name='0_users'] .col-form-label {
+    font-weight: 600;
+    font-size: .85rem;
+    color: #1a73e8 !important;
+    text-align: center;
+    padding-right: 0;
+}
+.manda { color: #e74c3c; font-weight: bold; }
+
+/* ---------- Inputs, selects ---------- */
+form[name='0_users'] .form-control {
+    border: 1px solid #cfd7e3;
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: .9rem;
+    color: #1a73e8;
+    text-align: center;
+    text-align-last: center;          /* centres the selected option in dropdowns */
+    background-color: #fff;
+    transition: border-color .15s, box-shadow .15s, background-color .15s;
+}
+form[name='0_users'] .form-control::placeholder {
+    color: #9bbcf0;
+    font-size: .85rem;
+}
+form[name='0_users'] .form-control:hover:not(:disabled) {
+    border-color: #9fb3cf;
+}
+form[name='0_users'] .form-control:focus {
+    border-color: #26b99a;
+    box-shadow: 0 0 0 3px rgba(38, 185, 154, .18);
+    background-color: #fcfffe;
+    outline: none;
+}
+form[name='0_users'] .form-control:required {
+    border-left: 4px solid #e74c3c;
+}
+form[name='0_users'] .form-control:required:focus {
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, .15);
+}
+form[name='0_users'] .form-control:disabled {
+    background: #f1f4f8;
+    color: #8a94a6;
+    cursor: not-allowed;
+}
+form[name='0_users'] .text-danger {
+    display: block;
+    margin-top: 4px;
+    text-align: center;
+    font-size: .75rem;
+}
+
+/* ---------- File upload (profile picture) ---------- */
+form[name='0_users'] .form-control-file {
+    width: 100%;
+    padding: 6px;
+    border: 1px dashed #9bbcf0;
+    border-radius: 6px;
+    background: #f7faff;
+    color: #1a73e8;
+    font-size: .85rem;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+}
+form[name='0_users'] .form-control-file:hover {
+    border-color: #26b99a;
+    background: #f2fbf8;
+}
+form[name='0_users'] .form-control-file::file-selector-button {
+    margin-right: 12px;
+    padding: 5px 14px;
+    border: 0;
+    border-radius: 5px;
+    background: #1a73e8;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+}
+form[name='0_users'] .form-control-file::file-selector-button:hover {
+    background: #1558b8;
+}
+form[name='0_users'] .mt-2 { text-align: center; }
+
+/* ---------- Divider & buttons ---------- */
+form[name='0_users'] .ln_solid {
+    border-top: 1px solid #e3e8ee;
+    margin: 24px 0 18px;
+}
+form[name='0_users'] .btn {
+    border-radius: 6px;
+    padding: .45em 1.4em;
+    font-weight: 600;
+    letter-spacing: .03em;
+    transition: transform .1s, box-shadow .15s, background .15s;
+}
+form[name='0_users'] .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, .15);
+}
+form[name='0_users'] .btn-success { background: #26b99a; border-color: #26b99a; }
+form[name='0_users'] .btn-success:hover { background: #1f9c82; box-shadow: 0 4px 10px rgba(38, 185, 154, .35); }
+
+/* ---------- Users table ---------- */
+.custom-table-wrapper {
+    width: 100% !important;
+    overflow-x: auto !important;
+    margin-top: 15px;
+    background: #fff;
+    border: 1px solid #e3e8ee;
+    border-radius: 8px;
+    padding: 10px;
+}
+.custom-table-wrapper table {
+    width: 100% !important;
+    max-width: none !important;
+    white-space: nowrap !important;
+}
+.custom-table-wrapper th,
+.custom-table-wrapper td {
+    padding: 10px 14px !important;
+    vertical-align: middle !important;
+    font-size: 13px !important;
+}
+.custom-table-wrapper thead th,
+.custom-table-wrapper tfoot th {
+    background-color: #f7f9fc !important;
+    color: #1a73e8 !important;
+    font-weight: 700 !important;
+    border-bottom: 2px solid #26b99a !important;
+}
+.custom-table-wrapper tbody tr:hover { background-color: rgba(38, 185, 154, .07) !important; }
+.custom-table-wrapper .badge { padding: 5px 10px; border-radius: 20px; font-weight: 600; font-size: 11px; }
+.custom-table-wrapper .badge-success { background: #26b99a; color: #fff; }
+.custom-table-wrapper .badge-danger  { background: #e74c3c; color: #fff; }
+.custom-table-wrapper input[type='checkbox'] { accent-color: #e74c3c; cursor: pointer; }
+
+.user-avatar-preview {
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #26b99a;
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 767px) {
+    form[name='0_users'] .col-form-label { padding-bottom: 4px; }
+    form[name='0_users'] .x_content { padding: 18px 14px; }
+}
+</style>
 <?php } ?>

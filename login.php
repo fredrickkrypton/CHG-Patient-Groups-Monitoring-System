@@ -14,30 +14,53 @@ if (isset($_SESSION['userusername']) && $_SESSION['userusername'] != '') {
 if (isset($_POST['login'])) {
     include('db.php');
 
-    $username = mysqli_real_escape_string($conn, $_POST['username']);
-    $password = mysqli_real_escape_string($conn, $_POST['password']);
-    $md5_password = md5($password);
+    $username     = trim((string)($_POST['username'] ?? ''));
+    $md5_password = md5((string)($_POST['password'] ?? ''));
 
-    $query = "SELECT * FROM `0_users` WHERE `username`='$username' AND `password`='$md5_password' AND `active`='Active'";
-    $result = mysqli_query($conn, $query);
+    $user = null;
+    $stmt = mysqli_prepare($conn, "SELECT * FROM `0_users` WHERE `username`=? AND `password`=? AND `active`='Active' LIMIT 1");
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, 'ss', $username, $md5_password);
+        mysqli_stmt_execute($stmt);
+        $res  = mysqli_stmt_get_result($stmt);
+        $user = $res ? mysqli_fetch_assoc($res) : null;
+        mysqli_stmt_close($stmt);
+    }
 
-    if ($result && mysqli_num_rows($result) > 0) {
-        $user = mysqli_fetch_assoc($result);
+    if ($user) {
+        // A group leader (role 4) must belong to a group, otherwise every page would look empty
+        if ((string)$user['role'] === '4' && trim((string)($user['groupid'] ?? '')) === '') {
+            $messg = "Your account has no group assigned. Please contact the administrator.";
+        } else {
+            session_regenerate_id(true);
 
-        $_SESSION['userusername']  = $user['username'];
-        $_SESSION['userfullnames'] = $user['fullnames'];
-        $_SESSION['userrole']      = $user['role'];
-        $_SESSION['userprofpic']   = $user['profpic'];
+            $_SESSION['userusername']  = $user['username'];
+            $_SESSION['userfullnames'] = $user['fullnames'];
+            $_SESSION['useremail']     = $user['email']   ?? '';
+            $_SESSION['userphone']     = $user['phone']   ?? '';
+            $_SESSION['userrole']      = $user['role'];
+            $_SESSION['groupid']       = $user['groupid'] ?? '';     // used to limit group leaders to their own group
+            $_SESSION['userprofpic']   = $user['profpic'] ?? '';
 
-        // Populate access permissions for this role so caniacess() works on every page
-        if (!function_exists('get_access')) {
-            require_once(__DIR__ . '/server.php');
+            // Populate access permissions for this role so caniacess() works on every page
+            if (!function_exists('get_access')) {
+                require_once(__DIR__ . '/server.php');
+            }
+            get_access($conn, $user['role']);
+
+            // Remember the last login (ignored if the column does not exist)
+            $now = date('Y-m-d H:i:s');
+            $upd = @mysqli_prepare($conn, "UPDATE `0_users` SET lastlogin=? WHERE username=?");
+            if ($upd) {
+                mysqli_stmt_bind_param($upd, 'ss', $now, $user['username']);
+                @mysqli_stmt_execute($upd);
+                mysqli_stmt_close($upd);
+            }
+
+            session_write_close();
+            header("Location: index.php");
+            exit();
         }
-        get_access($conn, $user['role']);
-
-        session_write_close();
-        header("Location: index.php");
-        exit();
     } else {
         $messg = "Invalid username or password.";
     }

@@ -278,4 +278,117 @@ if (function_exists('_title')) {
     </div>
 <?php } ?>
 </form>
+<style>
+/* ---------- Panel ---------- */
+form[name='settings'] .x_panel {
+    background: #fff;
+    border: 1px solid #e3e8ee;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .06);
+    overflow: hidden;
+    margin: 1rem auto;
+}
+form[name='settings'] .x_title {
+    background: #f7f9fc;
+    border-bottom: 1px solid #e3e8ee;
+    padding: 14px 20px;
+    margin: 0;
+}
+form[name='settings'] .x_title h2 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #1a73e8;
+    text-align: center;
+    margin: 0;
+}
+form[name='settings'] .x_title h2 small {
+    margin-left: 10px;
+    font-size: .75rem;
+    font-weight: 400;
+    color: #1a73e8;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+form[name='settings'] .x_content {
+    padding: 24px 28px;
+}
+
+/* ---------- Form rows ---------- */
+form[name='settings'] .item.form-group {
+    margin-bottom: 18px;
+}
+form[name='settings'] .col-form-label {
+    font-weight: 600;
+    font-size: .85rem;
+    color: #1a73e8 !important;   /* blue */
+    text-align: center;          /* centred */
+    padding-right: 0;
+}
+form[name='settings'] .manda {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+/* ---------- Inputs & textareas ---------- */
+form[name='settings'] .form-control {
+    border: 1px solid #cfd7e3;
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: .9rem;
+    color: #1a73e8;              /* blue text */
+    text-align: center;          /* centred text */
+    transition: border-color .15s, box-shadow .15s;
+}
+form[name='settings'] .form-control::placeholder {
+    color: #9bbcf0;
+}
+form[name='settings'] .form-control:focus {
+    border-color: #26b99a;
+    box-shadow: 0 0 0 3px rgba(38, 185, 154, .18);
+    outline: none;
+}
+form[name='settings'] .form-control:required {
+    border-left: 4px solid #e74c3c;
+}
+form[name='settings'] .form-control:required:focus {
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, .15);
+}
+form[name='settings'] textarea.form-control {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* ---------- Divider & buttons ---------- */
+form[name='settings'] .ln_solid {
+    border-top: 1px solid #e3e8ee;
+    margin: 24px 0 18px;
+}
+form[name='settings'] .btn {
+    border-radius: 6px;
+    padding: .45em 1.4em;
+    font-weight: 600;
+    letter-spacing: .03em;
+    transition: transform .1s, box-shadow .15s, background .15s;
+}
+form[name='settings'] .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, .15);
+}
+form[name='settings'] .btn-success {
+    background: #26b99a;
+    border-color: #26b99a;
+}
+form[name='settings'] .btn-success:hover {
+    background: #1f9c82;
+    box-shadow: 0 4px 10px rgba(38, 185, 154, .35);
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 767px) {
+    form[name='settings'] { min-width: 100% !important; }
+    form[name='settings'] .col-form-label { text-align: center; padding-bottom: 4px; }
+    form[name='settings'] .x_content { padding: 18px 14px; }
+}
+</style>
 <?php } ?>

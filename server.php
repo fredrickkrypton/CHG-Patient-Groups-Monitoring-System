@@ -1,37 +1,64 @@
-<?php 
+
+<?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-date_default_timezone_set("Africa/Nairobi"); 
-if (session_status() == PHP_SESSION_NONE) {
+
+date_default_timezone_set("Africa/Nairobi");
+
+if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-$Appnameversion=" v.1.0.0 ™ <a href='http://innovee.co.ke'> Innovee</a>";
+
+$Appnameversion = " v.1.0.0 ™ <a href='http://innovee.co.ke'> Innovee</a>";
 $Appurl = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
-$timestamp=date('Y-m-d H:i:s');
+$timestamp = date('Y-m-d H:i:s');
 
-$_SESSION['conn'] = $conn = mysqli_connect('127.0.0.1', 'root', '', 'afya', 3306);
+// Database configuration
+$db_host = '127.0.0.1';
+$db_user = 'root';
+$db_pass = '';
+$db_name = 'afya';
+$db_port = 3307;
+
+// Connect to MySQL
+mysqli_report(MYSQLI_REPORT_OFF);
+
+$conn = mysqli_connect(
+    $db_host,
+    $db_user,
+    $db_pass,
+    $db_name,
+    $db_port
+);
+
 if (!$conn) {
-    die('CONNECTION FAILED: ' . mysqli_connect_error());
-} else {
-    echo '';
+    die('DATABASE CONNECTION FAILED: ' . mysqli_connect_error());
 }
- //on session creation
-$_SESSION['timestamp']=time();
 
+// Store connection in session for existing application compatibility
+$_SESSION['conn'] = $conn;
+
+
+
+// Store connection in session only if needed by your existing application
+$_SESSION['conn'] = $conn;
+$_SESSION['timestamp'] = time();
+
+// Determine current page
 if (isset($_GET['page'])) {
     $page = $_GET['page'];
 } else {
     $parts = explode('/', $Appurl);
     $last_part = $parts[count($parts) - 1];
-    $parts = explode("&", $last_part, 2);
+    $parts = explode('&', $last_part, 2);
     $page = $parts[0];
 }
 
-// FIX: Safe array verification for "logout" key check
-if(isset($_GET['logout']))
-{
+// Logout
+if (isset($_GET['logout'])) {
+    $_SESSION = [];
     session_destroy();
-    session_unset();
+
     header("Location: index.php");
     exit();
 }

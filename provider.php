@@ -21,11 +21,17 @@ $page="provider";
 $part = isset($_GET['part']) ? trim($_GET['part']) : '';
 $timestamp=date('Y-m-d H:i:s');
 
+// Initialise variables so PHP does not raise "Undefined variable/key" warnings
+$alert = '';
+$error = '';
+$deleted = 0;
+$saved_ok = false;
+
 if (!function_exists('workout') && file_exists(__DIR__ . '/server.php')) {
     require_once(__DIR__ . '/server.php');
 }
 
-// FIX: Check if $_GET['D'] is set before processing to avoid the Undefined Key warning
+// Check if $_GET['D'] is set before processing to avoid the Undefined Key warning
 if (function_exists('workout') && isset($_GET['D'])) { 
     workout($_GET['D']); 
 }
@@ -37,13 +43,15 @@ if (isset($_GET['D']) && $part == '') {
     }
 }
 
+// $rec may not be set by workout() on the add/list screens
+if (!isset($rec)) { $rec = ''; }
 
 if($part=='') { caniacess($page."_view"); }
 if($part=='1') { caniacess($page."_add"); }
 if($part=='2') { caniacess($page."_edit"); }
 if(isset($_POST['provider_delete'])) { caniacess($page."_delete"); }
 
-if($_SESSION['stop']==1)
+if(isset($_SESSION['stop']) && $_SESSION['stop']==1)
 {  
     include('stop.php'); 
 }
@@ -52,13 +60,13 @@ else
 //---------------------------------------------------------------------------------------------------- 
 if(isset($_POST['provider_save']))
 {
-    $name=ucwords(($_POST['name']));
-    $subcounty_id=ucwords(($_POST['subcounty_id']));
-    $contact_name=ucwords(($_POST['contact_name']));
-    $contact_phone=ucwords(($_POST['contact_phone']));
-    $registration_date=dateto_mysql($_POST['registration_date']);
-    $created_by=ucwords(($username));
-    $created_on=ucwords(($timestamp));
+    $name=mysqli_real_escape_string($conn, ucwords($_POST['name'] ?? ''));
+    $subcounty_id=mysqli_real_escape_string($conn, ucwords($_POST['subcounty_id'] ?? ''));
+    $contact_name=mysqli_real_escape_string($conn, ucwords($_POST['contact_name'] ?? ''));
+    $contact_phone=mysqli_real_escape_string($conn, ucwords($_POST['contact_phone'] ?? ''));
+    $registration_date=dateto_mysql($_POST['registration_date'] ?? '');
+    $created_by=mysqli_real_escape_string($conn, ucwords($username));
+    $created_on=mysqli_real_escape_string($conn, ucwords($timestamp));
 
     if(trim($name)!=''&&trim($subcounty_id)!=''&&trim($contact_name)!=''&&trim($contact_phone)!=''&&trim($registration_date)!='') { 
         $sql = "INSERT INTO provider (name,subcounty_id,contact_name,contact_phone,registration_date,created_by,created_on)
@@ -66,6 +74,7 @@ if(isset($_POST['provider_save']))
         if ($conn->query($sql) === TRUE) {  
             $alert=1; 
             audittrail($conn,'provider','','inserting',$timestamp,$username); 
+            $saved_ok = true;
         } else { 
             $error=("Error: you are duplicating data!"); 
         }
@@ -89,7 +98,7 @@ if(isset($_POST['provider_save']))
         echo "<script> window.addEventListener('load', function () { 
         new PNotify({
                                       title: 'Error',
-                                      text: '$error',
+                                      text: '".addslashes($error)."',
 									  nonblock: { nonblock: !0 },
                                       type: 'error',
                                       styling: 'bootstrap3'
@@ -100,14 +109,14 @@ if(isset($_POST['provider_save']))
 //---------------------------------------------------------------------------------------------------- 
 if(isset($_POST['provider_update']))
 {
-    $name=ucwords(($_POST['name']));
-    $subcounty_id=ucwords(($_POST['subcounty_id']));
-    $contact_name=ucwords(($_POST['contact_name']));
-    $contact_phone=ucwords(($_POST['contact_phone']));
-    $registration_date=dateto_mysql($_POST['registration_date']);
-    $created_by=ucwords(($username));
-    $created_on=ucwords(($timestamp));
-    $logid=$_POST['logid'];
+    $name=mysqli_real_escape_string($conn, ucwords($_POST['name'] ?? ''));
+    $subcounty_id=mysqli_real_escape_string($conn, ucwords($_POST['subcounty_id'] ?? ''));
+    $contact_name=mysqli_real_escape_string($conn, ucwords($_POST['contact_name'] ?? ''));
+    $contact_phone=mysqli_real_escape_string($conn, ucwords($_POST['contact_phone'] ?? ''));
+    $registration_date=dateto_mysql($_POST['registration_date'] ?? '');
+    $created_by=mysqli_real_escape_string($conn, ucwords($username));
+    $created_on=mysqli_real_escape_string($conn, ucwords($timestamp));
+    $logid=mysqli_real_escape_string($conn, $_POST['logid'] ?? '');
 
     if(trim($name)!=''&&trim($subcounty_id)!=''&&trim($contact_name)!=''&&trim($contact_phone)!=''&&trim($registration_date)!='') { 
         $sql = "UPDATE provider SET name='$name',subcounty_id='$subcounty_id',contact_name='$contact_name',contact_phone='$contact_phone',registration_date='$registration_date',created_by='$created_by',created_on='$created_on' WHERE logid='$logid'";
@@ -137,7 +146,7 @@ if(isset($_POST['provider_update']))
         echo "<script> window.addEventListener('load', function () { 
         new PNotify({
                                       title: 'Error',
-                                      text: '$error',
+                                      text: '".addslashes($error)."',
 									  nonblock: { nonblock: !0 },
                                       type: 'error',
                                       styling: 'bootstrap3'
@@ -148,15 +157,14 @@ if(isset($_POST['provider_update']))
 //---------------------------------------------------------------------------------------------------- 
 if(isset($_POST['provider_delete']))
 { 
-    $count = $_POST['txtcount'];
-    for($i=0;$i<$count;$i++){ 
-        if($_POST['del'][$i]!='')
-        { 
-            audittrail($conn,'provider',$_POST['del'][$i],'deleting',$timestamp,$username);
-            $sql = "DELETE FROM provider WHERE logid='".$_POST['del'][$i]."'";
-            if ($conn->query($sql) === TRUE) { $deleted=$deleted+1; }
-        }  
-    } 
+    if(!empty($_POST['del']) && is_array($_POST['del'])) {
+        foreach($_POST['del'] as $delid) {
+            if(trim($delid)==='') { continue; }
+            $delid = mysqli_real_escape_string($conn, $delid);
+            audittrail($conn,'provider',$delid,'deleting',$timestamp,$username);
+            if ($conn->query("DELETE FROM provider WHERE logid='$delid'") === TRUE) { $deleted++; }
+        }
+    }
     if ($deleted>0) { $alert=1; } else { $error="No record selected"; }
     if($alert!='')
     {
@@ -174,7 +182,7 @@ if(isset($_POST['provider_delete']))
         echo "<script> window.addEventListener('load', function () { 
         new PNotify({
                                       title: 'Error',
-                                      text: '',
+                                      text: '".addslashes($error)."',
 									  nonblock: { nonblock: !0 },
                                       type: 'error',
                                       styling: 'bootstrap3'
@@ -317,100 +325,112 @@ _title($title='Provider'); ?>
     <form method='POST' action='' name='provider' enctype='multipart/form-data'>
     <?php if($part=='1') { ?>
         <!-- ==================== CREATE LAYOUT (CENTERED) ==================== -->
+        <?php
+            // After a successful save, clear the form so the same record isn't saved twice
+            $form = $saved_ok ? array() : $_POST;
+        ?>
+        <?php if($saved_ok) { ?>
+        <div style="max-width: 550px; margin: 20px auto 0; padding: 15px 20px; background: #eafaf1; border: 1px solid #b7e4c7; border-radius: 6px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <span style="color:#1e7e34; font-size:13px; font-weight:bold;"><i class="fa fa-check-circle"></i> Provider saved successfully.</span>
+            <span style="display:flex; gap:8px;">
+                <a href="index.php?page=<?=$page?>" class="chg-blue-btn"><i class="fa fa-eye"></i> View</a>
+                <a href="index.php?page=<?=$page?>&part=1" class="btn btn-secondary btn-sm" style="padding:8px 16px; font-size:13px;">Add Another</a>
+            </span>
+        </div>
+        <?php } ?>
         <div class="chg-form-center-wrapper">
            <div style="margin-bottom: 15px;">
               <label class="manda">Name :</label>
-              <?php
-                  // Safely fetch the value
-                  $name_val = isset($_POST['name']) ? htmlspecialchars($_POST['name']) : '';
-              ?>
-              <input type="text" required='required' class="form-control" name="name" id="name" placeholder="Name" value="<?php echo $name_val; ?>" autocomplete="off" onblur="js_validate(this,'general')">
+              <input type="text" required='required' class="form-control" name="name" id="name" placeholder="Name" value="<?php echo htmlspecialchars($form['name'] ?? ''); ?>" autocomplete="off" onblur="js_validate(this,'general')">
           </div>
 
             <div style="margin-bottom: 15px;">
                 <label class="manda">Subcounty id :</label>
                 <select class="form-control" id="subcounty_id" name="subcounty_id" required='required'>
-                    <? if($_POST['subcounty_id']) { 
-                        $qresult = mysqli_query($conn,"SELECT logid,name FROM subcounty where logid='".$_POST['subcounty_id']."'");
+                    <?php if(!empty($form['subcounty_id'])) { 
+                        $sel_sub = mysqli_real_escape_string($conn, $form['subcounty_id']);
+                        $qresult = mysqli_query($conn,"SELECT logid,name FROM subcounty where logid='".$sel_sub."'");
                         while($drow = mysqli_fetch_assoc($qresult)) { ?>
-                            <option value="<? echo $drow['logid']?>"><? echo $drow['name']?></option>
-                        <? }
+                            <option value="<?php echo $drow['logid']; ?>"><?php echo $drow['name']; ?></option>
+                        <?php }
                     } ?>
                     <option value="">Select Subcounty id</option>
-                    <? $qresult = mysqli_query($conn,"SELECT logid,name FROM subcounty ORDER BY name");
+                    <?php $qresult = mysqli_query($conn,"SELECT logid,name FROM subcounty ORDER BY name");
                     while($drow = mysqli_fetch_assoc($qresult)) { ?>
-                        <option value="<? echo $drow['logid']?>"><? echo $drow['name']?></option>
-                    <? } ?>
+                        <option value="<?php echo $drow['logid']; ?>"><?php echo $drow['name']; ?></option>
+                    <?php } ?>
                 </select>
             </div>
 
             <div style="margin-bottom: 15px;">
                 <label class="manda">Contact name :</label>
-                <input type="text" required='required' class="form-control" name="contact_name" id="contact_name" placeholder="Contact name" value="<? echo $_POST['contact_name']?>" autocomplete="off" onblur="js_validate(this,'general')">
+                <input type="text" required='required' class="form-control" name="contact_name" id="contact_name" placeholder="Contact name" value="<?php echo htmlspecialchars($form['contact_name'] ?? ''); ?>" autocomplete="off" onblur="js_validate(this,'general')">
             </div>
 
             <div style="margin-bottom: 15px;">
                 <label class="manda">Contact phone :</label>
-                <input type="text" required='required' class="form-control" name="contact_phone" id="contact_phone" placeholder="Contact phone" value="<? echo $_POST['contact_phone']?>" autocomplete="off" onblur="js_validate(this,'general')">
+                <input type="text" required='required' class="form-control" name="contact_phone" id="contact_phone" placeholder="Contact phone" value="<?php echo htmlspecialchars($form['contact_phone'] ?? ''); ?>" autocomplete="off" onblur="js_validate(this,'general')">
             </div>
 
             <div style="margin-bottom: 15px;">
                 <label class="manda">Registration date :</label>
-                <input type="text" class="form-control" value="<? echo date('d/m/Y')?>" name="registration_date" id="registration_date" onClick="return xCal('registration_date','/',4)">
+                <input type="text" class="form-control" value="<?php echo htmlspecialchars($form['registration_date'] ?? date('d/m/Y')); ?>" name="registration_date" id="registration_date" onClick="return xCal('registration_date','/',4)">
             </div>
 
             <div style="margin-top: 25px; padding-top: 15px; border-top:1px solid #eef2f5; display:flex; gap:10px; justify-content: flex-start;">
                 <button type="submit" name="provider_save" class="chg-blue-btn"><i class="fa fa-save"></i> Save</button>
-                <a href="?/<?=$page?>" class="btn btn-secondary btn-sm" style="padding:8px 16px; font-size:13px; line-height: 1.42857143;">Back</a>
+                <a href="index.php?page=<?=$page?>" class="chg-blue-btn" style="background-color:#6c757d !important;"><i class="fa fa-eye"></i> View</a>
+                <a href="index.php?page=<?=$page?>" class="btn btn-secondary btn-sm" style="padding:8px 16px; font-size:13px; line-height: 1.42857143;">Back</a>
             </div>
         </div>
 
     <?php } elseif($part=='2') { ?>
         <!-- ==================== EDIT LAYOUT (CENTERED) ==================== -->
         <div class="chg-form-center-wrapper">
-            <? $result = mysqli_query($conn,"SELECT * FROM provider WHERE logid='$rec'");
+            <?php $rec_safe = mysqli_real_escape_string($conn, $rec);
+            $result = mysqli_query($conn,"SELECT * FROM provider WHERE logid='$rec_safe'");
             while($row = mysqli_fetch_assoc($result)) { ?> 
                 <div style="margin-bottom: 15px;">
                     <label class="manda">Name :</label>
-                    <input type="text" required='required' class="form-control" name="name" id="name" placeholder="Name" value="<? echo $row['name']?>" autocomplete="off" onblur="js_validate(this,'general')">
+                    <input type="text" required='required' class="form-control" name="name" id="name" placeholder="Name" value="<?php echo htmlspecialchars($row['name']); ?>" autocomplete="off" onblur="js_validate(this,'general')">
                 </div>
 
                 <div style="margin-bottom: 15px;">
                     <label class="manda">Subcounty id :</label>
                     <select class="form-control" id="subcounty_id" name="subcounty_id" required='required'>
-                        <? $qresult = mysqli_query($conn,"SELECT logid,name FROM subcounty WHERE logid='".$row['subcounty_id']."'");
+                        <?php $qresult = mysqli_query($conn,"SELECT logid,name FROM subcounty WHERE logid='".mysqli_real_escape_string($conn,$row['subcounty_id'])."'");
                         while($drow = mysqli_fetch_assoc($qresult)) { ?>
-                            <option value="<? echo $drow['logid']?>"><? echo $drow['name']?></option>
-                        <? } ?>
+                            <option value="<?php echo $drow['logid']; ?>"><?php echo $drow['name']; ?></option>
+                        <?php } ?>
                         <option value="">Select Subcounty id</option>
-                        <? $qresult = mysqli_query($conn,"SELECT logid,name FROM subcounty ORDER BY name");
+                        <?php $qresult = mysqli_query($conn,"SELECT logid,name FROM subcounty ORDER BY name");
                         while($drow = mysqli_fetch_assoc($qresult)) { ?>
-                            <option value="<? echo $drow['logid']?>"><? echo $drow['name']?></option>
-                        <? } ?>
+                            <option value="<?php echo $drow['logid']; ?>"><?php echo $drow['name']; ?></option>
+                        <?php } ?>
                     </select>
                 </div>
 
                 <div style="margin-bottom: 15px;">
                     <label class="manda">Contact name :</label>
-                    <input type="text" required='required' class="form-control" name="contact_name" id="contact_name" placeholder="Contact name" value="<? echo $row['contact_name']?>" autocomplete="off" onblur="js_validate(this,'general')">
+                    <input type="text" required='required' class="form-control" name="contact_name" id="contact_name" placeholder="Contact name" value="<?php echo htmlspecialchars($row['contact_name']); ?>" autocomplete="off" onblur="js_validate(this,'general')">
                 </div>
 
                 <div style="margin-bottom: 15px;">
                     <label class="manda">Contact phone :</label>
-                    <input type="text" required='required' class="form-control" name="contact_phone" id="contact_phone" placeholder="Contact phone" value="<? echo $row['contact_phone']?>" autocomplete="off" onblur="js_validate(this,'general')">
+                    <input type="text" required='required' class="form-control" name="contact_phone" id="contact_phone" placeholder="Contact phone" value="<?php echo htmlspecialchars($row['contact_phone']); ?>" autocomplete="off" onblur="js_validate(this,'general')">
                 </div>
 
                 <div style="margin-bottom: 15px;">
                     <label class="manda">Registration date :</label>
-                    <input type="text" class="form-control" value="<? echo dateto_normal($row['registration_date'])?>" name="registration_date" id="registration_date" onClick="return xCal('registration_date','/',4)">
+                    <input type="text" class="form-control" value="<?php echo dateto_normal($row['registration_date']); ?>" name="registration_date" id="registration_date" onClick="return xCal('registration_date','/',4)">
                 </div>
 
                 <div style="margin-top: 25px; padding-top: 15px; border-top:1px solid #eef2f5; display:flex; gap:10px; justify-content: flex-start;">
                     <button type="submit" name="provider_update" class="chg-blue-btn"><i class="fa fa-save"></i> Update</button>
-                    <a href="?/<?=$page?>" class="btn btn-secondary btn-sm" style="padding:8px 16px; font-size:13px; line-height: 1.42857143;">Cancel</a>
+                    <a href="index.php?page=<?=$page?>" class="btn btn-secondary btn-sm" style="padding:8px 16px; font-size:13px; line-height: 1.42857143;">Cancel</a>
                 </div>
                 <input name="logid" type="hidden" value="<?=$row['logid']?>" />
-            <? } ?> 
+            <?php } ?> 
         </div>
 
     <?php } else { ?>
@@ -433,9 +453,9 @@ _title($title='Provider'); ?>
                     </tr>
                 </thead>
                 <tbody>
-                <? $mycount=0;
+                <?php $mycount=0;
                 if(isset($_POST['tbn_search'])) {
-                    $search=$_POST['search'];
+                    $search=mysqli_real_escape_string($conn, $_POST['search'] ?? '');
                     $result = mysqli_query($conn,"SELECT * FROM provider where name like '%$search%' OR subcounty_id like '%$search%' OR contact_name like '%$search%' OR contact_phone like '%$search%' OR registration_date like '%$search%' OR created_by like '%$search%' OR created_on like '%$search%'");
                 } else {
                     $result = mysqli_query($conn,"SELECT * FROM provider");
@@ -445,26 +465,26 @@ _title($title='Provider'); ?>
                     $mycount=$mycount+1; ?> 				  
                     <tr>
                         <td style="text-align: center;"><?=$mycount?></td>
-                        <td><strong><? echo $row['name']?></strong></td>
-                        <td><? $qresult = mysqli_query($conn,"SELECT name FROM subcounty WHERE logid='".$row['subcounty_id']."'");
+                        <td><strong><?php echo $row['name']; ?></strong></td>
+                        <td><?php $qresult = mysqli_query($conn,"SELECT name FROM subcounty WHERE logid='".mysqli_real_escape_string($conn,$row['subcounty_id'])."'");
                         while($drow = mysqli_fetch_assoc($qresult)) {  
                             echo $drow['name'];  
                         } ?></td>
-                        <td><? echo $row['contact_name']?></td>
-                        <td><? echo $row['contact_phone']?></td>
-                        <td><? echo dateto_display($row['registration_date'])?></td>
-                        <td><? echo $row['created_by']?></td>
-                        <td><? echo $row['created_on']?></td>
-                        <td align="center"><a href="?/provider_group&D=cGFydD0x&p=<?=$row['logid']?>"><i class="fa fa-lg fa-cog text-info"></i></a></td>
+                        <td><?php echo $row['contact_name']; ?></td>
+                        <td><?php echo $row['contact_phone']; ?></td>
+                        <td><?php echo dateto_display($row['registration_date']); ?></td>
+                        <td><?php echo $row['created_by']; ?></td>
+                        <td><?php echo $row['created_on']; ?></td>
+                        <td align="center"><a href="index.php?page=provider_group&D=cGFydD0x&p=<?=urlencode($row['logid'])?>" title="View groups"><i class="fa fa-lg fa-cog text-info"></i></a></td>
                         <td align="center">
-                            <? $edit="part=2&rec=".$row['logid']; ?>
-                            <a href="?/<?=$page?>&D=<? echo osteens($edit)?>" style="color: #1ea7e1;"><i class="fa fa-pencil"></i> Edit</a>
+                            <?php $edit="part=2&rec=".$row['logid']; ?>
+                            <a href="?/<?=$page?>&D=<?php echo osteens($edit); ?>" style="color: #1ea7e1;"><i class="fa fa-pencil"></i> Edit</a>
                         </td>
                         <td align="center">
                             <input name="del[]" type="checkbox" value="<?=$row['logid']?>" style="cursor:pointer;" />
                         </td>
                     </tr>
-                <? } ?>
+                <?php } ?>
                 </tbody>
                 <tfoot>
                     <tr style="background-color: #f5f5f5; font-weight: bold;">
@@ -478,7 +498,7 @@ _title($title='Provider'); ?>
                 </tfoot>
             </table>
         </div> 
-        <input type="hidden" name="txtcount" id="txtcount" value="<? echo $mycount;?>"> 
+        <input type="hidden" name="txtcount" id="txtcount" value="<?php echo $mycount; ?>"> 
     <?php } ?>
     </form>
 </div>
